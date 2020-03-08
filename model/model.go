@@ -28,7 +28,7 @@ func Prepare(ctx context.Context) {
 
 	switch common.CurrEnv {
 	case common.EnvTypeLocal:
-		db, err := sql.Open("mysql", "root:123456@tcp(localhost:3306)/corpus")
+		db, err := sql.Open("mysql", "root:woaininana12.0.@tcp(localhost:3306)/corpus")
 		if err != nil {
 			log.Panicf( "%s %s connect db err:%v", ctx,fun, err)
 			return
