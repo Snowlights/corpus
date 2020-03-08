@@ -11,6 +11,8 @@ func InitFunc() (err error) {
 
 
 	// You can put more preparations here
+
+
 	log.Println("%s usccess %s",ctx,fun)
 	return nil
 }

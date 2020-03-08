@@ -3,17 +3,18 @@ package router
 import (
 	"context"
 	corpus "github.com/Snowlights/pub/grpc"
+	"github.com/Snowlights/corpus/controller"
 )
 
 type CorpusServiceTmp struct {
 }
 
 func (m *CorpusServiceTmp) LoginUser(ctx context.Context, req *corpus.LoginUserReq) (*corpus.LoginUserRes,error){
-	return
+	return controller.LoginUser(ctx,req),nil
 }
 
 func (m *CorpusServiceTmp) UpdateUserInfo(ctx context.Context, req *corpus.UpdateUserInfoReq) (*corpus.UpdateUserInfoRes,error){
-
+	return controller.UpdateUserInfo(ctx,req),nil
 }
 
 func (m *CorpusServiceTmp) DelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) (*corpus.DelUserInfoRes,error){
