@@ -1,6 +1,9 @@
 package daoimpl
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func buildInsert(dataList map[string]interface{},tableName string) (string){
 	cond := ""
@@ -51,12 +54,16 @@ func buildUpdate(data, conds map[string]interface{}, tableName string) string{
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
 		}
 		vals = vals + " and"
 	}
-	vals = vals[0 : len(cond)-4]
+	vals = vals[0 : len(vals)-4]
 
 	cond = fmt.Sprintf("update %s set %s where %s",tableName,cond,vals)
+
+	log.Println(cond)
 	return cond
 }
 
@@ -72,6 +79,8 @@ func buildDelete(data, conds map[string]interface{}, tableName string)string{
 			cond = cond + fmt.Sprintf(" = %d",vv)
 		case bool:
 			cond = cond + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
 		}
 		cond = cond + ","
 	}
@@ -86,18 +95,20 @@ func buildDelete(data, conds map[string]interface{}, tableName string)string{
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
 		}
-		vals = vals + " and"
+		vals = vals + " and "
 	}
-	vals = vals[0 : len(cond)-4]
+	vals = vals[0 : len(vals)-5]
 
 	cond = fmt.Sprintf("update %s set %s where %s",tableName,cond,vals)
 	return cond
 }
 
-func buildList(conds map[string]interface{},tableName string)string{
+func buildList(limit, conds map[string]interface{},tableName string)string{
 	vals := ""
-
+	limitOffset := ""
 	for k,v := range conds {
 		vals = vals + k
 		switch vv := v.(type) {
@@ -107,12 +118,43 @@ func buildList(conds map[string]interface{},tableName string)string{
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
 		}
-		vals = vals + " and"
+		vals = vals + " and "
 	}
-	vals = vals[0 : len(vals)-4]
+	vals = vals[0 : len(vals)-5]
 
-	vals = fmt.Sprintf("select * from %s where %s",tableName,vals)
+	for k, v := range limit{
+		limitOffset = limitOffset + k
+
+		limitOffset = fmt.Sprintf("%s %d ",limitOffset,v)
+	}
+
+	vals = fmt.Sprintf("select * from %s where %s %s",tableName,vals,limitOffset)
+
+	return vals
+}
+
+func buildCount(conds map[string]interface{},tableName string) string{
+	vals := ""
+	for k,v := range conds {
+		vals = vals + k
+		switch vv := v.(type) {
+		case string:
+			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case int64:
+			vals = vals + fmt.Sprintf(" = %d",vv)
+		case bool:
+			vals = vals + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
+		}
+		vals = vals + " and "
+	}
+	vals = vals[0 : len(vals)-5]
+
+	vals = fmt.Sprintf("select count(*) as total from %s where %s",tableName,vals)
 
 	return vals
 }

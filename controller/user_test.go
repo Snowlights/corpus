@@ -2,9 +2,12 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"github.com/Snowlights/corpus/model"
-	corpus "github.com/Snowlights/pub/grpc"
+	"log"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 func initenv() context.Context{
@@ -15,15 +18,16 @@ func initenv() context.Context{
 }
 
 func TestLoginUser(t *testing.T) {
-	ctx:= initenv()
-	req := &corpus.LoginUserReq{
-		EMail:                "wei1109942647",
-		UserPassword:         "",
-		Phone:                "",
-		Code:                 0,
-		Cookie:               "",
-	}
+	//ctx:= initenv()
+	//req := &corpus.LoginUserReq{
+	//	EMail:                "wei1109942647",
+	//	UserPassword:         "",
+	//	Phone:                "",
+	//	Code:                 0,
+	//}
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
+	log.Println(vcode)
 
-
-	LoginUser(ctx,req)
+	//LoginUser(ctx,req)
 }

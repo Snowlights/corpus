@@ -2,21 +2,19 @@ package router
 
 import (
 	corpus "github.com/Snowlights/pub/grpc"
-	rocserv "github.com/shawnfeng/roc/util/service"
-	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
 	"net/http"
 )
 
 
 type ProcGrpc struct{}
-var clientGrpc *rocserv.ClientGrpc
 
 func (m *ProcGrpc) Init() error {
 	fun := "ProcGrpc.Init -->"
 
-	log.Println("%v success ",fun)
+	log.Printf("%v success ",fun)
 	return nil
 }
 

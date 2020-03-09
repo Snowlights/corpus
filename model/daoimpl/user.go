@@ -42,8 +42,12 @@ func (m UserLocalImpl) DelUserInfo(ctx context.Context, data,conds map[string]in
 	return delUserInfo(ctx,m.DB,data,conds)
 }
 
-func (m UserLocalImpl) ListUserInfo(ctx context.Context,conds map[string]interface{}) ([]*domain.UserInfo,error){
-	return listUserInfo(ctx,m.DB,conds)
+func (m UserLocalImpl) ListUserInfo(ctx context.Context,limit,conds map[string]interface{}) ([]*domain.UserInfo,error){
+	return listUserInfo(ctx,m.DB,limit,conds)
+}
+
+func (m UserLocalImpl) CountUserInfo(ctx context.Context,conds map[string]interface{}) (int64,error){
+	return countUserInfo(ctx,m.DB,conds)
 }
 
 func getUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{}) ([]*domain.UserInfo,error){
@@ -62,7 +66,7 @@ func getUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{})
 
 	for rows.Next(){
 		var userInfo domain.UserInfo
-		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.UserPassword,
+		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.Phone,&userInfo.UserPassword,
 			&userInfo.Token,&userInfo.CreatedAt,&userInfo.CreatedBy,&userInfo.UpdatedAt,&userInfo.UpdatedBy,&userInfo.IsDeleted)
 		if err != nil{
 			return nil,err
@@ -87,13 +91,71 @@ func addUserInfo(ctx context.Context,db model.DBTx,dataList map[string]interface
 }
 
 func updateUserInfo(ctx context.Context, db model.DBTx,data,conds map[string]interface{}) (int64,error){
-	return 0,nil
+
+	fun := "updateUserInfo -->"
+	cond := buildUpdate(data,conds,domain.EmptyUser.TableName())
+
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+
+	return sqlResult.RowsAffected()
 }
 
 func delUserInfo(ctx context.Context,db model.DBTx,data,conds map[string]interface{}) (int64,error){
-	return 0,nil
+	fun := "delUserInfo -->"
+	cond := buildDelete(data,conds,domain.EmptyUser.TableName())
+
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+
+	return sqlResult.RowsAffected()
 }
 
-func listUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{}) ([]*domain.UserInfo,error){
-	return nil,nil
+func listUserInfo(ctx context.Context,db model.DBTx,limit, conds map[string]interface{}) ([]*domain.UserInfo,error){
+
+	fun := "delUserInfo -->"
+	cond := buildList(limit,conds,domain.EmptyUser.TableName())
+
+	rows, err := db.Query(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return nil, err
+	}
+
+	var res []*domain.UserInfo
+
+	for rows.Next(){
+		var userInfo domain.UserInfo
+		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.Phone,&userInfo.UserPassword,
+			&userInfo.Token,&userInfo.CreatedAt,&userInfo.CreatedBy,&userInfo.UpdatedAt,&userInfo.UpdatedBy,&userInfo.IsDeleted)
+		if err != nil{
+			return nil,err
+		}
+		res = append(res,&userInfo)
+	}
+
+	return res,nil
+}
+
+func countUserInfo(ctx context.Context,db model.DBTx, conds map[string]interface{}) (total int64,err error) {
+	fun := "countUserInfo -->"
+	cond := buildCount(conds,domain.EmptyUser.TableName())
+	rows, err := db.Query(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+	rows.Next()
+	err = rows.Scan(&total)
+	if err != nil {
+		return
+	}
+
+	return
 }

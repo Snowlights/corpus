@@ -13,16 +13,24 @@ func (m *CorpusServiceTmp) LoginUser(ctx context.Context, req *corpus.LoginUserR
 	return controller.LoginUser(ctx,req),nil
 }
 
+func (m *CorpusServiceTmp) LogoutUserInfo(ctx context.Context, req *corpus.LogoutUserInfoReq) (*corpus.LogoutUserInfoRes,error){
+	return controller.LoginOutUserInfo(ctx,req),nil
+}
+
+func (m *CorpusServiceTmp) SendMessage(ctx context.Context,req *corpus.SendMessageReq)(*corpus.SendMessageRes,error){
+	return controller.SendMessage(ctx,req),nil
+}
+
 func (m *CorpusServiceTmp) UpdateUserInfo(ctx context.Context, req *corpus.UpdateUserInfoReq) (*corpus.UpdateUserInfoRes,error){
 	return controller.UpdateUserInfo(ctx,req),nil
 }
 
 func (m *CorpusServiceTmp) DelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) (*corpus.DelUserInfoRes,error){
-
+	return controller.DelUserInfo(ctx,req),nil
 }
 
 func (m *CorpusServiceTmp) ListUserInfo(ctx context.Context, req *corpus.ListUserInfoReq) (*corpus.ListUserInfoRes,error){
-
+	return controller.ListUserInfo(ctx,req),nil
 }
 
 func (m *CorpusServiceTmp) AddTransAudio(ctx context.Context, req *corpus.AddTransAudioReq) (*corpus.AddTransAudioRes,error){
