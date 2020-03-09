@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Snowlights/corpus/common"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 )
 
@@ -28,7 +29,7 @@ func Prepare(ctx context.Context) {
 
 	switch common.CurrEnv {
 	case common.EnvTypeLocal:
-		db, err := sql.Open("mysql", "root:woaininana12.0.@tcp(localhost:3306)/corpus")
+		db, err := sql.Open("mysql", "root:woaininana12.@tcp(127.0.0.1:3306)/corpus")
 		if err != nil {
 			log.Panicf( "%s %s connect db err:%v", ctx,fun, err)
 			return

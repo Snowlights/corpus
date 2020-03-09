@@ -76,9 +76,7 @@ func getUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{})
 func addUserInfo(ctx context.Context,db model.DBTx,dataList map[string]interface{}) (int64,error){
 	fun := "addUserInfo -->"
 
-	cond := fmt.Sprintf("insert into %s values (%s,%s,%s,%s,%s,%s,%d,%s,%d,%s,%d)",domain.EmptyUser.TableName(),
-		dataList["user_name"],dataList["user_description"],dataList["e_mail"],dataList["user_password"],dataList["phone"],
-		dataList["token"],dataList["created_at"],dataList["created_by"],dataList["updated_at"],dataList["updated_by"],dataList["is_deleted"])
+	cond := buildInsert(dataList,domain.EmptyUser.TableName())
 
 	sqlResult, err := db.Exec(cond)
 	if err != nil{
@@ -89,13 +87,13 @@ func addUserInfo(ctx context.Context,db model.DBTx,dataList map[string]interface
 }
 
 func updateUserInfo(ctx context.Context, db model.DBTx,data,conds map[string]interface{}) (int64,error){
-
+	return 0,nil
 }
 
 func delUserInfo(ctx context.Context,db model.DBTx,data,conds map[string]interface{}) (int64,error){
-
+	return 0,nil
 }
 
 func listUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{}) ([]*domain.UserInfo,error){
-
+	return nil,nil
 }
