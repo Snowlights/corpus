@@ -2,32 +2,31 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"github.com/Snowlights/corpus/model"
+	"github.com/Snowlights/corpus/model/daoimpl"
+	corpus "github.com/Snowlights/pub/grpc"
 	"log"
-	"math/rand"
 	"testing"
-	"time"
 )
 
 func initenv() context.Context{
 	ctx := context.Background()
 	model.Prepare(ctx)
-
+	daoimpl.PrePare(ctx)
 	return ctx
 }
 
 func TestLoginUser(t *testing.T) {
-	//ctx:= initenv()
-	//req := &corpus.LoginUserReq{
-	//	EMail:                "wei1109942647",
-	//	UserPassword:         "",
-	//	Phone:                "",
-	//	Code:                 0,
-	//}
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
-	log.Println(vcode)
+	ctx:= initenv()
+	req := &corpus.LoginUserReq{
+		EMail:                "xueyeup@163.com",
+		UserPassword:         "woaini12",
+		Phone:                "",
+		Code:                 0,
+	}
 
-	//LoginUser(ctx,req)
+	r := LoginUser(ctx,req)
+
+	log.Printf("%v",r)
+
 }

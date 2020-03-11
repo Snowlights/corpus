@@ -2,7 +2,6 @@ package daoimpl
 
 import (
 	"context"
-	"fmt"
 	"github.com/Snowlights/corpus/model"
 	"github.com/Snowlights/corpus/model/domain"
 	"log"
@@ -77,19 +76,18 @@ func TestUserLocalImpl_ListUserInfo(t *testing.T) {
 	cond := map[string]interface{}{
 		"e_mail" : "888@qq.com",
 		//"is_deleted" : false,
+		"phone" : []string{"222","777","888"},
 	}
 	query := buildList(limit,cond,domain.EmptyUser.TableName())
 
 	log.Printf("%v %s",ctx,query)
-
-	r, err := UserDao.ListUserInfo(ctx,limit,cond)
+	//
+	r, err := UserDao.CountUserInfo(ctx,cond)
 	if err != nil{
 		return
 	}
 
 	log.Printf("%v",r)
-	for _, item := range r{
-		fmt.Printf("%v",item)
-	}
+
 
 }

@@ -25,7 +25,17 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 		return res
 	}
 	if len(dataList) > 0 {
+		if dataList[0].UserPassword != req.UserPassword{
+			res.Errinfo = &corpus.ErrorInfo{
+				Ret:                  -1,
+				Msg:                  "密码不正确",
+			}
+			return res
+		}
 		AddCookieToList(dataList[0].Token)
+		if req.Phone != ""{
+			DelPhoneCode(req.Phone)
+		}
 		return res
 	}
 
@@ -37,6 +47,9 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 			Msg:                  err.Error(),
 		}
 		return res
+	}
+	if req.EMail != ""{
+		SendEmail([]string{req.EMail})
 	}
 
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
@@ -190,14 +203,19 @@ func toLoginUser(ctx context.Context, req *corpus.LoginUserReq) (map[string]inte
 		"updated_at" : now,
 		"updated_by" : "admin",
 	}
-	conds := map[string]interface{}{}
+	conds := map[string]interface{}{
+		"is_deleted" : false,
+	}
 	if req.Phone != ""{
+		data["user_name"] = req.Phone
 		data["phone"] = req.Phone
 		conds["phone"] = req.Phone
 	}
 
 	if req.EMail != ""{
+		data["user_name"] = req.EMail
 		data["e_mail"] = req.EMail
+		data["user_password"] = req.UserPassword
 		conds["e_mail"] = req.EMail
 	}
 	return data,conds
@@ -235,7 +253,9 @@ func toDelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) (map[string]i
 
 func toListUserInfo(ctx context.Context,req*corpus.ListUserInfoReq) (map[string]interface{},map[string]interface{}){
 
-	conds := map[string]interface{}{}
+	conds := map[string]interface{}{
+		"is_deleted" : false,
+	}
 	limit := map[string]interface{}{
 		"limit" : req.Limit,
 		"offset" : req.Offset,

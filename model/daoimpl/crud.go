@@ -5,6 +5,43 @@ import (
 	"log"
 )
 
+func buildGet(conds map[string]interface{}, tableName string) string{
+	vals := ""
+	for k,v := range conds {
+		vals = vals + k
+		switch vv := v.(type) {
+		case string:
+			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case []int64:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + fmt.Sprintf("%d",item)
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
+		case int64:
+			vals = vals + fmt.Sprintf(" = %d",vv)
+		case bool:
+			vals = vals + fmt.Sprintf(" = %v",vv)
+		case int:
+			vals = vals + fmt.Sprintf(" = %d",vv)
+		case []string:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + item
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
+		}
+		vals = vals + " and "
+	}
+	vals = vals[0 : len(vals)-5]
+	vals = fmt.Sprintf("select * from %s where %s ",tableName,vals)
+	return vals
+}
+
 func buildInsert(dataList map[string]interface{},tableName string) (string){
 	cond := ""
 	vals := ""
@@ -50,12 +87,28 @@ func buildUpdate(data, conds map[string]interface{}, tableName string) string{
 		switch vv := v.(type) {
 		case string:
 			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case []int64:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + fmt.Sprintf("%d",item)
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		case int64:
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
 		case int:
 			vals = vals + fmt.Sprintf(" = %d",vv)
+		case []string:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + item
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		}
 		vals = vals + " and"
 	}
@@ -91,12 +144,28 @@ func buildDelete(data, conds map[string]interface{}, tableName string)string{
 		switch vv := v.(type) {
 		case string:
 			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case []int64:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + fmt.Sprintf("%d",item)
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		case int64:
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
 		case int:
 			vals = vals + fmt.Sprintf(" = %d",vv)
+		case []string:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + item
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		}
 		vals = vals + " and "
 	}
@@ -114,12 +183,28 @@ func buildList(limit, conds map[string]interface{},tableName string)string{
 		switch vv := v.(type) {
 		case string:
 			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case []int64:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + fmt.Sprintf("%d",item)
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		case int64:
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
 		case int:
 			vals = vals + fmt.Sprintf(" = %d",vv)
+		case []string:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + item
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		}
 		vals = vals + " and "
 	}
@@ -143,12 +228,28 @@ func buildCount(conds map[string]interface{},tableName string) string{
 		switch vv := v.(type) {
 		case string:
 			vals = vals + fmt.Sprintf(" = '%s'",vv)
+		case []int64:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + fmt.Sprintf("%d",item)
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		case int64:
 			vals = vals + fmt.Sprintf(" = %d",vv)
 		case bool:
 			vals = vals + fmt.Sprintf(" = %v",vv)
 		case int:
 			vals = vals + fmt.Sprintf(" = %d",vv)
+		case []string:
+			vals = vals + fmt.Sprintf(" in (")
+			for _, item := range vv{
+				vals = vals + item
+				vals = vals +  ","
+			}
+			vals = vals[0:len(vals)-1]
+			vals = vals + ") "
 		}
 		vals = vals + " and "
 	}

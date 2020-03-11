@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -47,6 +48,8 @@ func message(mobile string) (error){
 	_mobile := mobile
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
+
+	AddPhoneCode(_mobile,vcode)
 	_content := fmt.Sprintf("您的验证码是：%v。请不要把验证码泄露给其他人。",vcode)
 	v.Set("account", _account)
 	v.Set("password", GetMd5String(_account+_password+_mobile+_content+_now))
@@ -68,4 +71,32 @@ func message(mobile string) (error){
 	data, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(data), err)
 	return nil
+}
+
+type MessageManager struct {
+	mu sync.Mutex
+	PhoneCode map[string]string
+}
+
+var messageManage MessageManager
+
+func Prepare(ctx context.Context){
+	messageManage.PhoneCode = make(map[string]string,1)
+}
+
+func AddPhoneCode (phone string,code string) bool{
+	messageManage.mu.Lock()
+	defer messageManage.mu.Unlock()
+
+	messageManage.PhoneCode[phone] = code
+	return true
+}
+
+func DelPhoneCode(phone string) bool{
+	messageManage.mu.Lock()
+	defer messageManage.mu.Unlock()
+
+	delete(messageManage.PhoneCode,phone)
+
+	return true
 }

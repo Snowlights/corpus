@@ -3,7 +3,6 @@ package daoimpl
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/Snowlights/corpus/common"
 	"github.com/Snowlights/corpus/model"
 	"github.com/Snowlights/corpus/model/dao"
@@ -53,8 +52,7 @@ func (m UserLocalImpl) CountUserInfo(ctx context.Context,conds map[string]interf
 func getUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{}) ([]*domain.UserInfo,error){
 	fun := "getUserInfo -->"
 
-	cond := fmt.Sprintf("select * from %s where phone = %s or e_mail = %s limit 1",domain.EmptyUser.TableName(),conds["phone"],
-		conds["e_mail"])
+	cond := buildGet(conds,domain.EmptyUser.TableName())
 
 	rows, err := db.Query(cond)
 	if err != nil{
