@@ -1,7 +1,11 @@
 package controller
 
 import (
+	"context"
+	"fmt"
 	"gopkg.in/gomail.v2"
+	"log"
+	"time"
 )
 var (
 	//mailTo = []string{ // 收件人列表
@@ -18,7 +22,8 @@ var (
 )
 
 
-func SendEmail(e_mail []string){
+func SendEmail(ctx context.Context,e_mail []string){
+	fun := "Controller.SendEmail -->"
 	m := gomail.NewMessage()
 	m.SetHeader(`From`, user)
 	m.SetHeader(`To`, e_mail...)
@@ -28,4 +33,27 @@ func SendEmail(e_mail []string){
 	if err != nil {
 		panic(err)
 	}
+
+	audit := formEmailAudit(e_mail)
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
+	log.Printf("%v %v success",ctx,fun)
+}
+
+func formEmailAudit(e_mail []string) map[string]interface{}{
+	now := time.Now().Unix()
+	audit := map[string]interface{}{
+		"table_name" : "user_login_out",
+		"content" : fmt.Sprintf("send email"),
+		"history" : fmt.Sprintf("send email time %v email %v",now,e_mail[0]),
+		"activity" : fmt.Sprintf("%v send email  ",e_mail[0]),
+		"created_at" : now,
+		"created_by" : e_mail[0],
+		"is_deleted" : false,
+	}
+	return audit
 }

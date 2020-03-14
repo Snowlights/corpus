@@ -44,22 +44,91 @@ func (m *AuthLocalImpl) CountAuth(ctx context.Context,conds map[string]interface
 }
 
 func getAuth(ctx context.Context,db model.DBTx,conds map[string]interface{}) ([]*domain.AuthInfo,error){
-	return nil,nil
+	fun := "getAuth -->"
+
+	cond := buildGet(conds,domain.EmptyAuth.TableName())
+
+	rows, err := db.Query(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return nil, err
+	}
+	var res []*domain.AuthInfo
+	for rows.Next(){
+		var auth domain.AuthInfo
+		err = rows.Scan(&auth.Id,&auth.AuthCode,&auth.AuthDescription,&auth.ServiceName,&auth.CreatedAt,
+			&auth.CreatedBy,&auth.UpdatedAt,&auth.UpdatedBy,&auth.IsDeleted)
+		res = append(res,&auth)
+	}
+
+	return res,nil
 }
 
 func addAuth(ctx context.Context,db model.DBTx, data map[string]interface{}) (int64,error){
-	return 0,nil
+	fun := "addAuth -->"
+	cond := buildInsert(data,domain.EmptyAuth.TableName())
+
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+	return sqlResult.LastInsertId()
 }
 
 func updateAuth(ctx context.Context,db model.DBTx,data,conds map[string]interface{}) (int64,error){
-	return 0,nil
+	fun := "updateAuth -->"
+	cond := buildUpdate(data,conds,domain.EmptyAuth.TableName())
+
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+
+	return sqlResult.RowsAffected()
 }
 func delAuth(ctx context.Context,db model.DBTx,data, conds map[string]interface{}) (int64,error){
-	return 0,nil
+	fun := "delAuth -->"
+
+	cond := buildDelete(data,conds,domain.EmptyAuth.TableName())
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+	return sqlResult.RowsAffected()
 }
 func listAuth(ctx context.Context,db model.DBTx, limit,conds map[string]interface{}) ([]*domain.AuthInfo,error) {
-	return nil,nil
+	fun := "listAuth -->"
+	cond := buildList(limit,conds,domain.EmptyAuth.TableName())
+
+	rows, err := db.Query(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return nil, err
+	}
+	var res []*domain.AuthInfo
+	for rows.Next(){
+		var auth domain.AuthInfo
+		err = rows.Scan(&auth.Id,&auth.AuthCode,&auth.AuthDescription,&auth.ServiceName,&auth.CreatedAt,
+			&auth.CreatedBy,&auth.UpdatedAt,&auth.UpdatedBy,&auth.IsDeleted)
+		res = append(res,&auth)
+	}
+
+	return res,nil
 }
 func countAuth(ctx context.Context,db model.DBTx,conds map[string]interface{}) (total int64,err error){
-	return 0,nil
+	fun:= "countAuth -->"
+
+	cond := buildCount(conds,domain.EmptyAuth.TableName())
+	rows, err := db.Query(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+	rows.Next()
+	err = rows.Scan(&total)
+
+	return
 }

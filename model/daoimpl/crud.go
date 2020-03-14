@@ -55,6 +55,8 @@ func buildInsert(dataList map[string]interface{},tableName string) (string){
 			vals = vals + fmt.Sprintf("%d", vv)
 		case bool:
 			vals = vals + fmt.Sprintf("%v", vv)
+		case []uint8:
+			vals = vals + fmt.Sprintf("'%v'",vv)
 		}
 		vals = vals + ","
 	}

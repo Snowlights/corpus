@@ -2,59 +2,20 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
 	"log"
-	"sync"
 	"time"
 )
 
-type cookie struct {
-	mu sync.Mutex
-	cookieList []string
-}
-
-var cookieList cookie
-
-func AddCookieToList(cookie string) bool{
-	cookieList.mu.Lock()
-	defer cookieList.mu.Unlock()
-
-	cookieList.cookieList = append(cookieList.cookieList,cookie)
-	return true
-}
-
-func DelCookieFromList(cookie string) bool {
-	cookieList.mu.Lock()
-	defer cookieList.mu.Unlock()
-	for i,item := range cookieList.cookieList{
-		if item == cookie{
-			cookieList.cookieList = append(cookieList.cookieList[:i],cookieList.cookieList[i+1:]...)
-		}
-	}
-
-	return false
-}
-
-func CheckOnLine(cookie string) bool{
-	cookieList.mu.Lock()
-	defer cookieList.mu.Unlock()
-
-	for _, item := range cookieList.cookieList{
-		if item == cookie{
-			return true
-		}
-	}
-	return false
-}
-
 func AddAuth(ctx context.Context,req *corpus.AddAuthReq) *corpus.AddAuthRes{
-	fun := "AddAuth -->"
+	fun := "Controller.AddAuth -->"
 	res := &corpus.AddAuthRes{}
 
-	data ,conds := toAddAuth(ctx,req)
-
+	//todo check cookie
+	data ,conds,audit := toAddAuth(ctx,req)
 	dataList ,err := daoimpl.AuthDao.GetAuth(ctx,conds)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -83,12 +44,18 @@ func AddAuth(ctx context.Context,req *corpus.AddAuthReq) *corpus.AddAuthRes{
 		return res
 	}
 
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 
 	return res
 }
 
-func toAddAuth(ctx context.Context,req *corpus.AddAuthReq) (map[string]interface{},map[string]interface{}){
+func toAddAuth(ctx context.Context,req *corpus.AddAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	data := map[string]interface{}{
 		"auth_code" : req.AuthCode,
@@ -104,14 +71,24 @@ func toAddAuth(ctx context.Context,req *corpus.AddAuthReq) (map[string]interface
 		"auth_code" : req.AuthCode,
 		"is_deleted" : false,
 	}
-	return data,conds
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyAuth.TableName(),
+		"history" : fmt.Sprintf("%s add auth %v time %d ",req.Cookie,req.AuthCode,now),
+		"activity" : fmt.Sprintf("%s add auth",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+
+	return data,conds,audit
 }
 
 func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAuthRes{
-	fun := "UpdateAuth -->"
+	fun := "Controller.UpdateAuth -->"
 	res := &corpus.UpdateAuthRes{}
 
-	data, conds := toUpdateAuth(ctx,req)
+	data, conds,audit  := toUpdateAuth(ctx,req)
 
 	rowsAffected, err := daoimpl.AuthDao.UpdateAuth(ctx,data,conds)
 	if err != nil{
@@ -122,12 +99,19 @@ func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAut
 		}
 		return res
 	}
+
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
 	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
 
 	return res
 }
 
-func toUpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) (map[string]interface{},map[string]interface{}){
+func toUpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	data := map[string]interface{}{
 		"auth_code" : req.AuthCode,
@@ -139,15 +123,24 @@ func toUpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) (map[string]int
 	conds := map[string]interface{}{
 		"id" : req.Id,
 	}
-	return data,conds
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyAuth.TableName(),
+		"history" : fmt.Sprintf("%s update auth %v time %d ",req.Cookie,req.AuthCode,now),
+		"activity" : fmt.Sprintf("%s update auth",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return data,conds,audit
 }
 
 
 func DelAuth(ctx context.Context,req* corpus.DelAuthReq) *corpus.DelAuthRes{
-	fun := "DelAuth -->"
+	fun := "Controller.DelAuth -->"
 	res := &corpus.DelAuthRes{}
 
-	data , conds := toDelAuth(ctx,req)
+	data , conds,audit  := toDelAuth(ctx,req)
 
 	rowsAffected, err := daoimpl.AuthDao.DelAuth(ctx,data,conds)
 	if err != nil{
@@ -158,11 +151,18 @@ func DelAuth(ctx context.Context,req* corpus.DelAuthReq) *corpus.DelAuthRes{
 		}
 		return res
 	}
+
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
 	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
 	return res
 }
 
-func toDelAuth(ctx context.Context,req* corpus.DelAuthReq) (map[string]interface{},map[string]interface{}){
+func toDelAuth(ctx context.Context,req* corpus.DelAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	data := map[string]interface{}{
 		"is_deleted": true,
@@ -177,13 +177,21 @@ func toDelAuth(ctx context.Context,req* corpus.DelAuthReq) (map[string]interface
 	if req.AuthCode != ""{
 		conds["auth_code"] = req.AuthCode
 	}
-
-	return data,conds
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyAuth.TableName(),
+		"history" : fmt.Sprintf("%s del auth %v time %d ",req.Cookie,req.AuthCode,now),
+		"activity" : fmt.Sprintf("%s del auth",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return data,conds,audit
 }
 
 
 func ListAuth(ctx context.Context,req* corpus.ListAuthReq) *corpus.ListAuthRes{
-	fun := "ListAuth -->"
+	fun := "Controller.ListAuth -->"
 	res := &corpus.ListAuthRes{}
 
 	limit, conds := toListAuth(ctx,req)
@@ -243,16 +251,190 @@ func toListAuth(ctx context.Context,req* corpus.ListAuthReq) (map[string]interfa
 }
 
 func AddUserAuth(ctx context.Context,req* corpus.AddUserAuthReq) *corpus.AddUserAuthRes{
+	fun := "Controller.AddUserAuth -->"
 	res:= &corpus.AddUserAuthRes{}
+	data, conds,audit := toAddUserAuth(ctx,req)
+
+	dataList,err := daoimpl.UserAuthDao.GetUserAuth(ctx,conds)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	if len(dataList) > 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "已经存在的记录",
+		}
+		return res
+	}
+
+	lastInsertId,err := daoimpl.UserAuthDao.AddUserAuth(ctx,data)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
+	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
+
 	return res
+}
+
+func toAddUserAuth(ctx context.Context,req* corpus.AddUserAuthReq)(map[string]interface{},map[string]interface{},map[string]interface{}){
+	now := time.Now().Unix()
+	data := map[string]interface{}{
+		"user_id" : req.UserId,
+		"auth_code" : req.AuthCode,
+		"created_at" : now,
+		"created_by" : req.Cookie,
+	}
+	conds := map[string]interface{}{
+		"user_id" : req.UserId,
+		"auth_code" : req.AuthCode,
+		"is_deleted" : false,
+	}
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyUserAuth.TableName(),
+		"history" : fmt.Sprintf("%s add user %v auth %v time %d ",req.Cookie,req.UserId,req.AuthCode,now),
+		"activity" : fmt.Sprintf("%s add user auth",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return data,conds,audit
 }
 
 func DelUserAuth(ctx context.Context,req *corpus.DelUserAuthReq) *corpus.DelUserAuthRes{
+	fun := "Controller.DelUserAuth --> "
 	res := &corpus.DelUserAuthRes{}
+	data,conds,audit := toDelUserAuth(ctx,req)
+	rowsAffected,err := daoimpl.UserAuthDao.DelUserAuth(ctx,data,conds)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
+	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
 	return res
 }
 
+func toDelUserAuth(ctx context.Context,req *corpus.DelUserAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
+	now := time.Now().Unix()
+	data := map[string]interface{}{
+		"is_deleted": true,
+	}
+	conds := map[string]interface{}{
+		"user_id" : req.UserId,
+		"auth_code" : req.AuthCode,
+	}
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyUserAuth.TableName(),
+		"history" : fmt.Sprintf("%s del user %v auth %v time %d ",req.Cookie,req.UserId,req.AuthCode,now),
+		"activity" : fmt.Sprintf("%s del user auth",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return data,conds,audit
+}
+
+
 func ListUserAuth(ctx context.Context, req *corpus.ListUserAuthReq) *corpus.ListUserAuthRes{
+	fun := "Controller.ListUserAuth -->"
 	res:= &corpus.ListUserAuthRes{}
+
+	limit,conds := toListUserAuth(ctx,req)
+	dataList, err := daoimpl.UserAuthDao.ListUserAuth(ctx,limit,conds)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	if len(dataList) == 0{
+		res.Data = &corpus.ListUserAuthData{}
+		return res
+	}
+
+	var codeList []string
+
+	for _, item := range dataList{
+		codeList = append(codeList,item.AuthCode)
+	}
+
+	authCodeConds := map[string]interface{}{
+		"auth_code" : codeList,
+	}
+
+	authDataList,err := daoimpl.AuthDao.ListAuth(ctx,limit,authCodeConds)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	total,err := daoimpl.AuthDao.CountAuth(ctx,authCodeConds)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	data := formCorpusAuthInfoList(authDataList)
+	res.Data = &corpus.ListUserAuthData{
+		Items:                data,
+		Total:                total,
+		Offset:               req.Offset+int64(len(dataList)),
+		More:                 (req.Offset+int64(len(dataList))) < total,
+	}
+
 	return res
+}
+
+func toListUserAuth(ctx context.Context, req *corpus.ListUserAuthReq)(map[string]interface{},map[string]interface{}){
+	limit := map[string]interface{}{
+		"limit" : req.Limit,
+		"offset" : req.Offset,
+	}
+	conds := map[string]interface{}{
+		"is_deleted" : false,
+	}
+	if req.UserId != 0{
+		conds["user_id"] = req.UserId
+	}
+
+	return limit,conds
 }

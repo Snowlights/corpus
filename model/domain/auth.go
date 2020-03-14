@@ -1,6 +1,6 @@
 package domain
 
-const TableAuth = "corpus_admin"
+const TableAuth = "corpus_access"
 
 var EmptyAuth = &AuthInfo{}
 

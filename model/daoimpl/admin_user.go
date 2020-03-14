@@ -130,9 +130,6 @@ func countAdminUser(ctx context.Context,db model.DBTx,conds map[string]interface
 	}
 	rows.Next()
 	err = rows.Scan(&total)
-	if err != nil {
-		return
-	}
 
 	return
 }

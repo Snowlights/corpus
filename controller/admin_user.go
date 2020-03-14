@@ -2,16 +2,20 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"github.com/Snowlights/corpus/model/daoimpl"
+	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
 	"log"
 	"time"
 )
 
 func AddAdminUser(ctx context.Context,req* corpus.AddAdminUserReq) *corpus.AddAdminUserRes{
-	fun := "AddAdminUser -->"
+	fun := "Controller.AddAdminUser -->"
 	res := &corpus.AddAdminUserRes{}
-	data, conds := toAddAdminUser(ctx,req)
+	data, conds,audit := toAddAdminUser(ctx,req)
+
+	//todo check cookie
 
 	dataList ,err := daoimpl.AdminUserDao.GetAdminUser(ctx,conds)
 	if err != nil{
@@ -40,15 +44,21 @@ func AddAdminUser(ctx context.Context,req* corpus.AddAdminUserReq) *corpus.AddAd
 		return res
 	}
 
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	return res
 }
 
 func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdminUserRes{
-	fun := "DelAdminUser -->"
+	fun := "Controller.DelAdminUser -->"
 	res := &corpus.DelAdminUserRes{}
 
-	data, conds := toDelAdminUser(ctx,req)
+	data, conds,audit := toDelAdminUser(ctx,req)
 	rowsAffected , err := daoimpl.AdminUserDao.DelAdminUser(ctx,data,conds)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -59,12 +69,18 @@ func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdm
 		return res
 	}
 
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
 	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
 	return res
 }
 
 func ListAdminUser(ctx context.Context,req *corpus.ListAdminUserReq) *corpus.ListAdminUserRes{
-	fun := "ListAdminUser --> "
+	fun := "Controller.ListAdminUser --> "
 	res := &corpus.ListAdminUserRes{}
 	limit, conds := toListAdminUser(ctx,req)
 
@@ -126,7 +142,7 @@ func ListAdminUser(ctx context.Context,req *corpus.ListAdminUserReq) *corpus.Lis
 	return res
 }
 
-func toAddAdminUser(ctx context.Context,req *corpus.AddAdminUserReq) (map[string]interface{},map[string]interface{}){
+func toAddAdminUser(ctx context.Context,req *corpus.AddAdminUserReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	data := map[string]interface{}{
 		"user_id" : req.UserId,
@@ -141,10 +157,19 @@ func toAddAdminUser(ctx context.Context,req *corpus.AddAdminUserReq) (map[string
 		"is_deleted" : false,
 	}
 
-	return data,conds
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyAdminUser.TableName(),
+		"history" : fmt.Sprintf("%s add admin user id %v time %d ",req.Cookie,req.UserId,now),
+		"activity" : fmt.Sprintf("%s add admin user",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return data,conds,audit
 }
 
-func toDelAdminUser(ctx context.Context,req *corpus.DelAdminUserReq) (map[string]interface{},map[string]interface{}){
+func toDelAdminUser(ctx context.Context,req *corpus.DelAdminUserReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	data := map[string]interface{}{
 		"is_deleted" : true,
@@ -154,7 +179,17 @@ func toDelAdminUser(ctx context.Context,req *corpus.DelAdminUserReq) (map[string
 	conds := map[string]interface{}{
 		"user_id" : req.UserId,
 	}
-	return data,conds
+	audit := map[string]interface{}{
+		"table_name" : domain.EmptyAdminUser.TableName(),
+		"history" : fmt.Sprintf("%s del admin user id %v time %d ",req.Cookie,req.UserId,now),
+		"activity" : fmt.Sprintf("%s del admin user",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+
+	return data,conds,audit
 }
 
 func toListAdminUser(ctx context.Context, req *corpus.ListAdminUserReq) (map[string]interface{}, map[string]interface{}){

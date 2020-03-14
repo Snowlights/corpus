@@ -3,7 +3,7 @@ module github.com/Snowlights/corpus
 go 1.12
 
 require (
-	github.com/Snowlights/pub v0.0.0-20200311091331-266ae57fc642 // indirect
+	github.com/Snowlights/pub v0.0.0-20200311091331-266ae57fc642
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.3.4 // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect

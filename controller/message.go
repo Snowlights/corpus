@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	corpus "github.com/Snowlights/pub/grpc"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -30,9 +30,31 @@ func SendMessage(ctx context.Context,req* corpus.SendMessageReq) *corpus.SendMes
 		}
 		return res
 	}
+	audit := formMessageAudit(req)
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
+	log.Printf("%v %v success",ctx,fun)
 	return res
 }
+
+func formMessageAudit(req *corpus.SendMessageReq) map[string]interface{}{
+	now := time.Now().Unix()
+	audit := map[string]interface{}{
+		"table_name" : "user_login_out",
+		"content" : fmt.Sprintf("send phone code"),
+		"history" : fmt.Sprintf("send phone code time %v phone %v",now,req.Phone),
+		"activity" : fmt.Sprintf("%v phone code send",req.Phone),
+		"created_at" : now,
+		"created_by" : req.Phone,
+		"is_deleted" : false,
+	}
+	return audit
+}
+
 
 func GetMd5String(s string) string {
 	h := md5.New()
@@ -49,7 +71,7 @@ func message(mobile string) (error){
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
 
-	AddPhoneCode(_mobile,vcode)
+	cache.AddPhoneCode(_mobile,vcode)
 	_content := fmt.Sprintf("您的验证码是：%v。请不要把验证码泄露给其他人。",vcode)
 	v.Set("account", _account)
 	v.Set("password", GetMd5String(_account+_password+_mobile+_content+_now))
@@ -73,30 +95,3 @@ func message(mobile string) (error){
 	return nil
 }
 
-type MessageManager struct {
-	mu sync.Mutex
-	PhoneCode map[string]string
-}
-
-var messageManage MessageManager
-
-func Prepare(ctx context.Context){
-	messageManage.PhoneCode = make(map[string]string,1)
-}
-
-func AddPhoneCode (phone string,code string) bool{
-	messageManage.mu.Lock()
-	defer messageManage.mu.Unlock()
-
-	messageManage.PhoneCode[phone] = code
-	return true
-}
-
-func DelPhoneCode(phone string) bool{
-	messageManage.mu.Lock()
-	defer messageManage.mu.Unlock()
-
-	delete(messageManage.PhoneCode,phone)
-
-	return true
-}
