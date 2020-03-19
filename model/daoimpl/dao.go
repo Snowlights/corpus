@@ -16,6 +16,8 @@ var (
 	KeyDao dao.KeyDao
 	KeyWordDao dao.KeyWordDao
 	KeyWordTxDao dao.KeyWordTxDao
+	AudioDao dao.AudioDao
+	RecognizeDao dao.RecognizeDao
 )
 
 func PrePare(ctx context.Context){
@@ -30,6 +32,8 @@ func PrePare(ctx context.Context){
 	KeyDao = NewKeyDao()
 	KeyWordDao = NewKeyWordDao()
 	KeyWordTxDao = NewKeyWordTxDao()
+	AudioDao = NewAudioDao()
+	RecognizeDao = NewRecognizeDao()
 	log.Printf("%v %s success ",ctx,fun)
 	return
 }

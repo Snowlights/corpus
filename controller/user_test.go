@@ -2,11 +2,13 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	corpus "github.com/Snowlights/pub/grpc"
 	"log"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -22,7 +24,7 @@ func initenv() context.Context{
 func TestLoginUser(t *testing.T) {
 	ctx:= initenv()
 	req := &corpus.LoginUserReq{
-		EMail:                "xueyeup@163.com",
+		EMail:                "858777157@qq.com",
 		UserPassword:         "woaini12",
 		Phone:                "",
 		Code:                 0,
@@ -60,8 +62,8 @@ func TestAddAuth(t *testing.T) {
 func TestEvaluation(t *testing.T) {
 	ctx := initenv()
 	req := &corpus.EvaluationReq{
-		Audio:                "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\cn\\cn_sentence.wav",
-		Text: 				  "不管我的梦想能否成为事实.",
+		Audio:                "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_chapter.wav",
+		Text: 				  "Firefighters take part in an emergency rescue drill in a forest in Taian city, Shandong province, on Feb 24, 2019. This is the countrys largest joint air-ground drill with around 2,000 rescuers, seven helicopters and vehicles, and over 1,200 firefighting equipment taking part in the exercise.",
 		Cookie:               "JnL3gxsI402j4hs4",
 	}
 	r := Evaluation(ctx,req)
@@ -82,4 +84,30 @@ func TestGetKeyWord(t *testing.T) {
 	log.Printf("%v",r)
 
 	time.Sleep(time.Second*5)
+}
+
+
+func TestTransAudioToText(t *testing.T) {
+
+	file := "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_sentence.wav"
+
+	audioText(file)
+
+}
+
+func TestRecognizeAge(t *testing.T) {
+	file := "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_sentence.wav"
+	recognizeAge(file)
+}
+
+func TestPictureResult_String(t *testing.T) {
+	picture_trans("")
+}
+
+func TestDelUserInfo(t *testing.T) {
+	number := rand.Intn(10)
+	fmt.Print(number)
+
+	file := "C:\\Users\\华硕\\Desktop\\file.png"
+	handwriting_xunfei(file)
 }

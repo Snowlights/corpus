@@ -48,23 +48,23 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 	return res
 }
 
-func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]interface{},*EvaluationResponse){
+func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]interface{},*EvaluationResp){
 	dataList := map[string]interface{}{}
 	dataList["audio_src"] = req.Audio
 	dataList["audio_text"] = req.Text
 	now := time.Now().Unix()
 
-	var res EvaluationResponse
+	var res EvaluationResp
 	err  := json.Unmarshal(data,&res)
 	if err != nil{
 		log.Printf("analizeEvaluationData failed ")
 		return dataList,&res
 	}
-	//if res.ReadSentence.RecPaper.ReadWord.TotalScore != 0{
-	//	dataList["total_score"] = res.ReadSentence.RecPaper.ReadWord.TotalScore
-	//} else {
-	//	dataList["total_score"] = 0
-	//}
+	if res.Data.ReadSentence.RecPaper.ReadChapter.TotalScore != ""{
+		dataList["total_score"] = res.Data.ReadSentence.RecPaper.ReadChapter.TotalScore
+	} else {
+		dataList["total_score"] = 0
+	}
 	origindata := string(data)
 	dataList["total_score"] = int64(0)
 	dataList["original_data"] = origindata
@@ -75,7 +75,6 @@ func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]in
 	return dataList,&res
 }
 
-
 func evaluation(filename string,text string) []byte{
 
 	appid := "5e1c39a3"
@@ -84,7 +83,7 @@ func evaluation(filename string,text string) []byte{
 
 	param := make(map[string]string)
 	param["aue"] = "raw"
-	param["language"] = "zh_cn"
+	param["language"] = "en_us"
 	param["category"] = "read_sentence"
 
 	tmp, _ := json.Marshal(param)
@@ -117,55 +116,76 @@ func evaluation(filename string,text string) []byte{
 	resp_body, _ := ioutil.ReadAll(res.Body)
 	fmt.Print(string(resp_body))
 
+
 	return resp_body
 }
-type Word struct {
-	BegPos int64 `json:"beg_pos"`
+
+type Phone struct {
+	BegPos string `json:"beg_pos"`
+	EndPos string `json:"end_pos"`
+	DpMessage string `json:"dp_message"`
 	Content string `json:"content"`
-	EndPos int64 `json:"end_pos"`
-	Symbol string `json:"symbol"`
-	TimeLen int64 `json:"time_len"`
+}
+
+type Syll struct {
+	Phone []Phone `json:"phone"`
+	BegPos string `json:"beg_pos"`
+	EndPos string `json:"end_pos"`
+	Content string `json:"content"`
+	SyllAccent string `json:"syll_accent"`
+	SyllScore string `json:"syll_score"`
+}
+
+type EvaluationWord struct {
+	Index string `json:"index"`
+	BegPos string `json:"beg_pos"`
+	EndPos string `json:"end_pos"`
+	DpMessage string `json:"dp_message"`
+	Content string `json:"content"`
+	GlobalIndex string `json:"global_index"`
 	TotalScore string `json:"total_score"`
+	Property string `json:"property"`
+	Syll []Syll `json:"syll"`
 }
 
-type Sentence struct {
-	BegPos int64 `json:"beg_pos"`
+type EvaluationSentence struct {
+	Index string `json:"index"`
+	BegPos string `json:"beg_pos"`
+	EndPos string `json:"end_pos"`
 	Content string `json:"content"`
-	EndPos int64 `json:"end_pos"`
-	TimeLen int64 `json:"time_len"`
-	TotalScore float64 `json:"total_score"`
-	Word Word `json:"word"`
+	TotalScore string `json:"total_score"`
+	WordCount string `json:"word_count"`
+	Word []EvaluationWord `json:"word"`
 }
 
-type ReadWord struct {
+type ReadChapter struct {
+	BegPos string `json:"beg_pos"`
+	EndPos string `json:"end_pos"`
 	ExceptInfo string `json:"except_info"`
-	IsRejected bool `json:"is_rejected"`
-	TimeLen int64 `json:"time_len"`
-	TotalScore float64 `json:"total_score"`
-	Sentence []Sentence `json:"sentence"`
-	BegPos int64 `json:"beg_pos"`
+	IsRejected string `json:"is_rejected"`
 	Content string `json:"content"`
-	EndPos int64 `json:"end_pos"`
+	TotalScore string `json:"total_score"`
+	WordCount string `json:"word_count"`
+	Sentence []EvaluationSentence `json:"sentence"`
 }
 
 type RecPaper struct {
-	ReadWord ReadWord `json:"read_sentence"`
+	ReadChapter ReadChapter `json:"read_chapter"`
 }
 
 type ReadSentence struct {
+	RecPaper RecPaper `json:"rec_paper"`
 	Lan string `json:"lan"`
 	Type string `json:"type"`
 	Version string `json:"version"`
-	RecPaper RecPaper `json:"rec_paper"`
 }
 
 type EvaluationData struct {
 	ReadSentence ReadSentence `json:"read_sentence"`
 }
-
-type EvaluationResponse struct {
-	Code int64 `json:"code"`
+type EvaluationResp struct {
+	Data EvaluationData `json:"data"`
 	Desc string `json:"desc"`
 	Sid string `json:"sid"`
-	Data EvaluationData `json:"data"`
+	Code string `json:"code"`
 }

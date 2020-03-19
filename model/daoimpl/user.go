@@ -64,7 +64,7 @@ func getUserInfo(ctx context.Context,db model.DBTx,conds map[string]interface{})
 
 	for rows.Next(){
 		var userInfo domain.UserInfo
-		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.Phone,&userInfo.UserPassword,
+		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.UserPassword,&userInfo.Phone,
 			&userInfo.Token,&userInfo.CreatedAt,&userInfo.CreatedBy,&userInfo.UpdatedAt,&userInfo.UpdatedBy,&userInfo.IsDeleted)
 		if err != nil{
 			return nil,err
@@ -130,7 +130,7 @@ func listUserInfo(ctx context.Context,db model.DBTx,limit, conds map[string]inte
 
 	for rows.Next(){
 		var userInfo domain.UserInfo
-		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.Phone,&userInfo.UserPassword,
+		err = rows.Scan(&userInfo.Id,&userInfo.UserName,&userInfo.UserDescription,&userInfo.E_mail,&userInfo.UserPassword,&userInfo.Phone,
 			&userInfo.Token,&userInfo.CreatedAt,&userInfo.CreatedBy,&userInfo.UpdatedAt,&userInfo.UpdatedBy,&userInfo.IsDeleted)
 		if err != nil{
 			return nil,err

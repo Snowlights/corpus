@@ -14,9 +14,7 @@ import (
 func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRes{
 	fun := "Controller.LoginUser -- >"
 	res := &corpus.LoginUserRes{}
-
 	data,conds,audit := toLoginUser(ctx,req)
-
 	dataList ,err := daoimpl.UserDao.GetUserInfo(ctx,conds)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -34,7 +32,10 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
 	if len(dataList) > 0 {
-		if dataList[0].UserPassword != req.UserPassword{
+		password := dataList[0].UserPassword
+		log.Printf("%s",password)
+		if req.UserPassword != password {
+			log.Printf("%v 55  %v",dataList[0].UserPassword,req.UserPassword)
 			res.Errinfo = &corpus.ErrorInfo{
 				Ret:                  -1,
 				Msg:                  "密码不正确",
