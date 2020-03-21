@@ -21,12 +21,12 @@ func init() {
 	logs.SetLogFuncCallDepth(3)
 }
 
-func picture_trans(file string) string{
+func picture_trans(file string) *PictureTransData{
 	// 创建Request
 	req, err := http.NewRequest(http.MethodPost, CompressingUrl, nil)
 	if err != nil {
 		logs.Error(err)
-		return ""
+		return nil
 	}
 
 	// 将鉴权信息写入Request
@@ -36,7 +36,7 @@ func picture_trans(file string) string{
 	data, err := ioutil.ReadFile("C:\\Users\\华硕\\Desktop\\11.png")
 	if err != nil {
 		logs.Error(err)
-		return ""
+		return nil
 	}
 	req.Body = ioutil.NopCloser(bytes.NewReader(data))
 
@@ -44,14 +44,14 @@ func picture_trans(file string) string{
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logs.Error(err)
-		return ""
+		return nil
 	}
 
 	// 解析请求
 	data, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		logs.Error(err)
-		return ""
+		return nil
 	}
 
 	logs.Info(string(data))
@@ -60,7 +60,7 @@ func picture_trans(file string) string{
 
 	logs.Info(pictureData)
 
-	return ""
+	return &pictureData
 }
 
 type Input struct {

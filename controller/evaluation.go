@@ -25,8 +25,11 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 
 	data := evaluation(req.Audio,req.Text)
 
-	dataList,_ := analizeEvaluationData(data,req)
+	//var m map[string]interface{}
 
+	//erro := json.Unmarshal(data,&m)
+
+	dataList,resp := analizeEvaluationData(data,req)
 	lastInsertId,err := daoimpl.EvaluationDao.AddEvaluation(ctx,dataList)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -36,11 +39,14 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 		}
 		return res
 	}
+	fmt.Printf("%v \n",resp.Data.ReadSentence.RecPaper.ReadChapter.TotalScore)
+	words := toFormEvaluationWord(resp)
+	score,_ :=strconv.ParseFloat(string(resp.Data.ReadSentence.RecPaper.ReadChapter.TotalScore),32)
 	//todo items word
 	res.Data = &corpus.EvaluationData{
-		Items:                nil,
-		TotalNumber:          0,
-		TotalScore:           0,
+		Items:                words,
+		TotalNumber:          int64(len(words)),
+		TotalScore:           int64(score),
 	}
 
 	log.Printf("%v",data)
@@ -48,11 +54,85 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 	return res
 }
 
+func toFormEvaluationWord(resp *EvaluationResp) []*corpus.Word{
+	var res []*corpus.Word
+
+	r := resp.Data.ReadSentence.RecPaper.ReadChapter.Sentence
+	switch r.(type){
+	case map[string]interface{}:
+		re := r.(map[string]interface{})
+		dat := re["word"]
+
+		word := dat.([]interface{})
+
+		fmt.Printf("%v \n",len(word))
+		for _ , item := range word{
+			ite := item.(map[string]interface{})
+			var content,totalScore string
+			if _, ok := ite["content"]; ok{
+				content = ite["content"].(string)
+			} else {
+				content = " "
+			}
+			if _,ok := ite["total_score"] ;ok{
+				totalScore = ite["total_score"].(string)
+			} else {
+				totalScore = "0"
+			}
+			totalScoreRes,err := strconv.ParseFloat(totalScore,32)
+			if err != nil{
+				fmt.Printf("error %v\n",err)
+			}
+			res = append(res,&corpus.Word{
+				Content:              content,
+				Score:                float32(totalScoreRes),
+			})
+		}
+		fmt.Sprintf("%v %v ",word,res)
+	case []interface{}:
+		re := r.([]interface{})
+		for _, item := range re {
+			re := item.(map[string]interface{})
+			dat := re["word"]
+			word := dat.([]interface{})
+			fmt.Printf("%v \n",len(word))
+			for _ , item := range word{
+				ite := item.(map[string]interface{})
+				var content,totalScore string
+				if _, ok := ite["content"]; ok{
+					content = ite["content"].(string)
+				} else {
+					content = " "
+				}
+				if _,ok := ite["total_score"] ;ok{
+					totalScore = ite["total_score"].(string)
+				} else {
+					totalScore = "0"
+				}
+				totalScoreRes,err := strconv.ParseFloat(totalScore,32)
+				if err != nil{
+					fmt.Printf("error %v\n",err)
+				}
+				res = append(res,&corpus.Word{
+					Content:              content,
+					Score:                float32(totalScoreRes),
+				})
+			}
+			fmt.Sprintf("%v %v ",word,res)
+		}
+	}
+
+	return res
+}
+
+
+
 func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]interface{},*EvaluationResp){
 	dataList := map[string]interface{}{}
 	dataList["audio_src"] = req.Audio
 	dataList["audio_text"] = req.Text
 	now := time.Now().Unix()
+
 
 	var res EvaluationResp
 	err  := json.Unmarshal(data,&res)
@@ -60,14 +140,9 @@ func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]in
 		log.Printf("analizeEvaluationData failed ")
 		return dataList,&res
 	}
-	if res.Data.ReadSentence.RecPaper.ReadChapter.TotalScore != ""{
-		dataList["total_score"] = res.Data.ReadSentence.RecPaper.ReadChapter.TotalScore
-	} else {
-		dataList["total_score"] = 0
-	}
 	origindata := string(data)
-	dataList["total_score"] = int64(0)
-	dataList["original_data"] = origindata
+	dataList["total_score"] = res.Data.ReadSentence.RecPaper.ReadChapter.TotalScore
+	dataList["original_data"] = fmt.Sprintf("%v",origindata)
 	dataList["created_at"] = now
 	dataList["created_by"] = req.Cookie
 	dataList["is_deleted"] = false
@@ -116,7 +191,6 @@ func evaluation(filename string,text string) []byte{
 	resp_body, _ := ioutil.ReadAll(res.Body)
 	fmt.Print(string(resp_body))
 
-
 	return resp_body
 }
 
@@ -128,7 +202,7 @@ type Phone struct {
 }
 
 type Syll struct {
-	Phone []Phone `json:"phone"`
+	Phone interface{} `json:"phone"`
 	BegPos string `json:"beg_pos"`
 	EndPos string `json:"end_pos"`
 	Content string `json:"content"`
@@ -145,7 +219,7 @@ type EvaluationWord struct {
 	GlobalIndex string `json:"global_index"`
 	TotalScore string `json:"total_score"`
 	Property string `json:"property"`
-	Syll []Syll `json:"syll"`
+	Syll interface{} `json:"syll"`
 }
 
 type EvaluationSentence struct {
@@ -155,7 +229,7 @@ type EvaluationSentence struct {
 	Content string `json:"content"`
 	TotalScore string `json:"total_score"`
 	WordCount string `json:"word_count"`
-	Word []EvaluationWord `json:"word"`
+	Word interface{} `json:"word"`
 }
 
 type ReadChapter struct {
@@ -166,7 +240,7 @@ type ReadChapter struct {
 	Content string `json:"content"`
 	TotalScore string `json:"total_score"`
 	WordCount string `json:"word_count"`
-	Sentence []EvaluationSentence `json:"sentence"`
+	Sentence interface{} `json:"sentence"`
 }
 
 type RecPaper struct {

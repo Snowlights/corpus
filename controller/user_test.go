@@ -2,13 +2,11 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	corpus "github.com/Snowlights/pub/grpc"
 	"log"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -63,7 +61,7 @@ func TestEvaluation(t *testing.T) {
 	ctx := initenv()
 	req := &corpus.EvaluationReq{
 		Audio:                "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_chapter.wav",
-		Text: 				  "Firefighters take part in an emergency rescue drill in a forest in Taian city, Shandong province, on Feb 24, 2019. This is the countrys largest joint air-ground drill with around 2,000 rescuers, seven helicopters and vehicles, and over 1,200 firefighting equipment taking part in the exercise.",
+		Text:"Firefighters take part in an emergency rescue drill in a forest in Taian city, Shandong province, on Feb 24, 2019. This is the countrys largest joint air-ground drill with around 2,000 rescuers, seven helicopters and vehicles, and over 1,200 firefighting equipment taking part in the exercise.",
 		Cookie:               "JnL3gxsI402j4hs4",
 	}
 	r := Evaluation(ctx,req)
@@ -105,9 +103,20 @@ func TestPictureResult_String(t *testing.T) {
 }
 
 func TestDelUserInfo(t *testing.T) {
-	number := rand.Intn(10)
-	fmt.Print(number)
 
-	file := "C:\\Users\\华硕\\Desktop\\file.png"
-	handwriting_xunfei(file)
+	ctx := initenv()
+	req := &corpus.RecognizeImageReq{
+		File:                 "C:\\Users\\华硕\\Desktop\\file.png",
+		Cookie:               "",
+		XXX_NoUnkeyedLiteral: struct{}{},
+		XXX_unrecognized:     nil,
+		XXX_sizecache:        0,
+	}
+	r := RecognizeImage(ctx,req)
+	log.Printf("%v",r)
+}
+
+func TestDelAdminUser(t *testing.T) {
+
+
 }

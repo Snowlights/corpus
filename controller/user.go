@@ -46,6 +46,9 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 		if req.Phone != ""{
 			cache.DelPhoneCode(req.Phone)
 		}
+		res.Data = &corpus.LoginUserData{
+			Cookie:               dataList[0].Token,
+		}
 		return res
 	}
 
@@ -63,6 +66,9 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 	}
 
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
+	res.Data = &corpus.LoginUserData{
+		Cookie:               data["cookie"].(string),
+	}
 	return res
 }
 

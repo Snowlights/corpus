@@ -12,36 +12,90 @@ import (
 )
 
 func RecognizeImage(ctx context.Context,req *corpus.RecognizeImageReq) *corpus.RecognizeImageRes{
+	fun := "Controller.RecognizeImage --> "
 	res :=&corpus.RecognizeImageRes{}
 	rand.Seed(time.Now().Unix())
 	number := rand.Intn(10)
+
+	var data,audit map[string]interface{}
+	pictureTrans := picture_trans(req.File)
+
 	if number < 5{
 		resp := handwriting_baidu(req.File)
-		toFormRecognizeImageBaidu(resp)
+		data, audit = toFormRecognizeImageBaidu(req,resp,pictureTrans)
 	} else {
 		resp := handwriting_xunfei(req.File)
-		toFormRecognizeImageXf(resp)
+		data, audit = toFormRecognizeImageXf(req,resp,pictureTrans)
 	}
+	lastInsertId,err := daoimpl.RecognizeDao.AddRecognizeImage(ctx,data)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	auditLastInsertId, err := addAudit(ctx,audit)
+	if err!= nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+	}
+	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
+	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	return res
 }
 
-func toFormRecognizeImageBaidu(resp *BaiduPicture)(map[string]interface{},map[string]interface{}){
+func toFormRecognizeImageBaidu(req *corpus.RecognizeImageReq,resp *BaiduPicture,presp *PictureTransData)(map[string]interface{},map[string]interface{}){
+	now := time.Now().Unix()
 	data := map[string]interface{}{
-
+		"picture_src" : req.File,
+		"picture_des" : presp.Output.Url,
+		"picture_text" : resp.WordsResult,
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
 	}
 	audit := map[string]interface{}{
-
+		"table_name" : domain.EmptyRecognize.TableName(),
+		"history" : fmt.Sprintf("%s recognize picture to text picture src %v time %d ",req.Cookie,req.File,now),
+		"activity" : fmt.Sprintf("%s recognize picture",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
 	}
 	return data,audit
 }
 
-func toFormRecognizeImageXf(resp *XfPictureResp)(map[string]interface{},map[string]interface{}){
-	data := map[string]interface{}{
+func toFormRecognizeImageXf(req *corpus.RecognizeImageReq,resp *XfPictureResp,presp *PictureTransData)(map[string]interface{},map[string]interface{}){
+	now := time.Now().Unix()
 
+	str := ""
+	for _, item := range resp.Data.Block{
+
+		for _ ,ite := range item.Line{
+			for _, wo := range ite.Word{
+				str = str + wo.Content
+			}
+		}
+	}
+	data := map[string]interface{}{
+		"picture_src" : req.File,
+		"picture_des" : presp.Output.Url,
+		"picture_text" : str,
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
 	}
 	audit := map[string]interface{}{
-
+		"table_name" : domain.EmptyRecognize.TableName(),
+		"history" : fmt.Sprintf("%s recognize picture to text picture src %v time %d ",req.Cookie,req.File,now),
+		"activity" : fmt.Sprintf("%s recognize picture",req.Cookie),
+		"content" : fmt.Sprintf("%v",data),
+		"created_at" : now,
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
 	}
 	return data,audit
 }
