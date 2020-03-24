@@ -212,11 +212,9 @@ func buildList(limit, conds map[string]interface{},tableName string)string{
 	}
 	vals = vals[0 : len(vals)-5]
 
-	for k, v := range limit{
-		limitOffset = limitOffset + k
 
-		limitOffset = fmt.Sprintf("%s %d ",limitOffset,v)
-	}
+	limitOffset = limitOffset + fmt.Sprintf("limit %d offset %d ",limit["limit"],limit["offset"])
+
 
 	vals = fmt.Sprintf("select * from %s where %s %s",tableName,vals,limitOffset)
 

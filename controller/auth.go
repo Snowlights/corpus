@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
@@ -15,6 +16,15 @@ func AddAuth(ctx context.Context,req *corpus.AddAuthReq) *corpus.AddAuthRes{
 	res := &corpus.AddAuthRes{}
 
 	//todo check cookie
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可添加",
+		}
+		return res
+	}
+
 	data ,conds,audit := toAddAuth(ctx,req)
 	dataList ,err := daoimpl.AuthDao.GetAuth(ctx,conds)
 	if err != nil{
@@ -87,7 +97,14 @@ func toAddAuth(ctx context.Context,req *corpus.AddAuthReq) (map[string]interface
 func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAuthRes{
 	fun := "Controller.UpdateAuth -->"
 	res := &corpus.UpdateAuthRes{}
-
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可修改",
+		}
+		return res
+	}
 	data, conds,audit  := toUpdateAuth(ctx,req)
 
 	rowsAffected, err := daoimpl.AuthDao.UpdateAuth(ctx,data,conds)
@@ -139,7 +156,14 @@ func toUpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) (map[string]int
 func DelAuth(ctx context.Context,req* corpus.DelAuthReq) *corpus.DelAuthRes{
 	fun := "Controller.DelAuth -->"
 	res := &corpus.DelAuthRes{}
-
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可删除",
+		}
+		return res
+	}
 	data , conds,audit  := toDelAuth(ctx,req)
 
 	rowsAffected, err := daoimpl.AuthDao.DelAuth(ctx,data,conds)
@@ -193,7 +217,6 @@ func toDelAuth(ctx context.Context,req* corpus.DelAuthReq) (map[string]interface
 func ListAuth(ctx context.Context,req* corpus.ListAuthReq) *corpus.ListAuthRes{
 	fun := "Controller.ListAuth -->"
 	res := &corpus.ListAuthRes{}
-
 	limit, conds := toListAuth(ctx,req)
 	dataList, err := daoimpl.AuthDao.ListAuth(ctx,limit,conds)
 	if err != nil{

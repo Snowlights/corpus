@@ -21,6 +21,10 @@ func (m *CorpusServiceTmp) SendMessage(ctx context.Context,req *corpus.SendMessa
 	return controller.SendMessage(ctx,req),nil
 }
 
+func (m *CorpusServiceTmp) UpdateUserPhone(ctx context.Context,req *corpus.UpdateUserPhoneReq) (*corpus.UpdateUserPhoneRes,error){
+	return controller.UpdateUserPhone(ctx,req),nil
+}
+
 func (m *CorpusServiceTmp) UpdateUserInfo(ctx context.Context, req *corpus.UpdateUserInfoReq) (*corpus.UpdateUserInfoRes,error){
 	return controller.UpdateUserInfo(ctx,req),nil
 }

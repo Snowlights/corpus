@@ -32,15 +32,27 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
 	if len(dataList) > 0 {
-		password := dataList[0].UserPassword
-		log.Printf("%s",password)
-		if req.UserPassword != password {
-			log.Printf("%v 55  %v",dataList[0].UserPassword,req.UserPassword)
-			res.Errinfo = &corpus.ErrorInfo{
-				Ret:                  -1,
-				Msg:                  "密码不正确",
+		if req.EMail != ""{
+			password := dataList[0].UserPassword
+			log.Printf("%s",password)
+			if req.UserPassword != password {
+				log.Printf("%v 55  %v",dataList[0].UserPassword,req.UserPassword)
+				res.Errinfo = &corpus.ErrorInfo{
+					Ret:                  -1,
+					Msg:                  "密码不正确",
+				}
+				return res
 			}
-			return res
+		} else if req.Phone != ""{
+			pass := cache.CheckPhoneCode(req.Phone,req.Code)
+			if ! pass{
+				res.Errinfo = &corpus.ErrorInfo{
+					Ret:                  -1,
+					Msg:                  "验证码不正确",
+				}
+				return res
+			}
+
 		}
 		cache.AddCookieToList(dataList[0].Token)
 		if req.Phone != ""{
@@ -67,7 +79,7 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	res.Data = &corpus.LoginUserData{
-		Cookie:               data["cookie"].(string),
+		Cookie:               data["token"].(string),
 	}
 	return res
 }
@@ -106,6 +118,51 @@ func LoginOutUserInfo(ctx context.Context, req *corpus.LogoutUserInfoReq) *corpu
 	return res
 }
 
+func UpdateUserPhone(ctx context.Context,req *corpus.UpdateUserPhoneReq) *corpus.UpdateUserPhoneRes{
+	fun := "Controller.UpdateUserPhone -->"
+	res := &corpus.UpdateUserPhoneRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		log.Fatalf("%v %s err cookie not in list %v",ctx,fun,req.Cookie)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
+
+	pass = cache.CheckPhoneCode(req.Phone,req.Code)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "不正确的验证码",
+		}
+		return res
+	}
+
+	data := map[string]interface{}{
+		"phone" : req.Phone,
+	}
+	conds := map[string]interface{}{
+		"token" : req.Cookie,
+	}
+
+	rowsAffected,err := daoimpl.UserDao.UpdateUserInfo(ctx,data,conds)
+	if err != nil{
+		log.Fatalf("%v %s error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	cache.DelPhoneCode(req.Phone)
+
+	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
+	return res
+}
+
 func UpdateUserInfo(ctx context.Context ,req *corpus.UpdateUserInfoReq) *corpus.UpdateUserInfoRes{
 	fun := "Controller.UpdateUserInfo -- >"
 	res:= &corpus.UpdateUserInfoRes{}
@@ -116,6 +173,39 @@ func UpdateUserInfo(ctx context.Context ,req *corpus.UpdateUserInfoReq) *corpus.
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
 			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
+
+	conds := map[string]interface{}{
+		"id" : req.UserId,
+	}
+	limit := map[string]interface{}{
+		"limit" : 1,
+		"offset" : 0,
+	}
+	userInfo,err := daoimpl.UserDao.ListUserInfo(ctx,limit,conds)
+	if err != nil{
+		log.Fatalf("%v %s error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	if len(userInfo) == 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未找到该用户信息",
+		}
+		return res
+	}
+
+	if userInfo[0].Token != req.Cookie{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "非本人无法修改",
 		}
 		return res
 	}
@@ -154,6 +244,40 @@ func DelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) *corpus.DelUser
 		}
 		return res
 	}
+
+	conds := map[string]interface{}{
+		"id" : req.UserId,
+	}
+	limit := map[string]interface{}{
+		"limit" : 1,
+		"offset" : 0,
+	}
+	userInfo,err := daoimpl.UserDao.ListUserInfo(ctx,limit,conds)
+	if err != nil{
+		log.Fatalf("%v %s error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	if len(userInfo) == 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未找到该用户信息",
+		}
+		return res
+	}
+
+	if userInfo[0].Token != req.Cookie{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "非本人无法修改",
+		}
+		return res
+	}
+
 	conds, data,audit := toDelUserInfo(ctx,req)
 	auditLastInsertId, err := addAudit(ctx,audit)
 	if err!= nil{
@@ -178,6 +302,15 @@ func DelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) *corpus.DelUser
 func ListUserInfo(ctx context.Context,req*corpus.ListUserInfoReq) *corpus.ListUserInfoRes{
 	fun := "Controller.ListUserInfo -- >"
 	res:= &corpus.ListUserInfoRes{}
+
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可查看",
+		}
+		return res
+	}
 
 	conds, limit := toListUserInfo(ctx,req)
 
@@ -289,11 +422,11 @@ func toUpdateUserInfo(ctx context.Context,req *corpus.UpdateUserInfoReq) (map[st
 	}
 	data := map[string]interface{}{
 		"user_name": req.UserName,
-		"phone" : req.Phone,
 		"e_mail" : req.EMail,
+		"user_password" : req.Password,
 		"user_description" : req.Description,
 		"updated_at" : now,
-		"updated_by" : req.UserName,
+		"updated_by" : req.Cookie,
 	}
 
 	audit := map[string]interface{}{

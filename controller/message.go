@@ -21,7 +21,8 @@ func SendMessage(ctx context.Context,req* corpus.SendMessageReq) *corpus.SendMes
 	fun := "Controller.SendMessage -- >"
 	res := &corpus.SendMessageRes{}
 
-	err := message(req.Phone)
+	//err := message(req.Phone)
+	code,err := testMessage(req.Phone)
 	if err!= nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
 		res.Errinfo = &corpus.ErrorInfo{
@@ -36,6 +37,10 @@ func SendMessage(ctx context.Context,req* corpus.SendMessageReq) *corpus.SendMes
 		log.Fatalf("%v %v error %v",ctx,fun,err)
 	}
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
+
+	res.Data = &corpus.SendMessageData{
+		Code:                 code,
+	}
 
 	log.Printf("%v %v success",ctx,fun)
 	return res
@@ -55,13 +60,20 @@ func formMessageAudit(req *corpus.SendMessageReq) map[string]interface{}{
 	return audit
 }
 
+func testMessage(phone string) (string,error){
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
+
+	cache.AddPhoneCode(phone,vcode)
+	return vcode,nil
+}
 
 func GetMd5String(s string) string {
 	h := md5.New()
 	h.Write([]byte(s))
 	return hex.EncodeToString(h.Sum(nil))
 }
-func message(mobile string) (error){
+func message(mobile string) (string,error){
 	v := url.Values{}
 	_now := strconv.FormatInt(time.Now().Unix(), 10)
 	//fmt.Printf(_now)
@@ -87,11 +99,11 @@ func message(mobile string) (error){
 
 	resp, err := client.Do(req) //发送
 	if err!= nil{
-		return err
+		return "",err
 	}
 	defer resp.Body.Close()     //一定要关闭resp.Body
 	data, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(data), err)
-	return nil
+	return vcode,nil
 }
 

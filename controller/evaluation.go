@@ -24,7 +24,6 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 	//todo check cookie
 
 	data := evaluation(req.Audio,req.Text)
-
 	//var m map[string]interface{}
 
 	//erro := json.Unmarshal(data,&m)

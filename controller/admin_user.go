@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
@@ -13,9 +14,17 @@ import (
 func AddAdminUser(ctx context.Context,req* corpus.AddAdminUserReq) *corpus.AddAdminUserRes{
 	fun := "Controller.AddAdminUser -->"
 	res := &corpus.AddAdminUserRes{}
-	data, conds,audit := toAddAdminUser(ctx,req)
 
-	//todo check cookie
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可添加",
+		}
+		return res
+	}
+
+	data, conds,audit := toAddAdminUser(ctx,req)
 
 	dataList ,err := daoimpl.AdminUserDao.GetAdminUser(ctx,conds)
 	if err != nil{
@@ -58,6 +67,15 @@ func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdm
 	fun := "Controller.DelAdminUser -->"
 	res := &corpus.DelAdminUserRes{}
 
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可添加",
+		}
+		return res
+	}
+
 	data, conds,audit := toDelAdminUser(ctx,req)
 	rowsAffected , err := daoimpl.AdminUserDao.DelAdminUser(ctx,data,conds)
 	if err != nil{
@@ -82,6 +100,16 @@ func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdm
 func ListAdminUser(ctx context.Context,req *corpus.ListAdminUserReq) *corpus.ListAdminUserRes{
 	fun := "Controller.ListAdminUser --> "
 	res := &corpus.ListAdminUserRes{}
+
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可添加",
+		}
+		return res
+	}
+
 	limit, conds := toListAdminUser(ctx,req)
 
 	dataList, err := daoimpl.AdminUserDao.ListAdminUser(ctx,limit,conds)

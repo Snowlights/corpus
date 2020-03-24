@@ -7,8 +7,8 @@ import (
 	"github.com/Snowlights/corpus/model/daoimpl"
 	corpus "github.com/Snowlights/pub/grpc"
 	"log"
+	"reflect"
 	"testing"
-	"time"
 )
 
 func initenv() context.Context{
@@ -25,7 +25,7 @@ func TestLoginUser(t *testing.T) {
 		EMail:                "858777157@qq.com",
 		UserPassword:         "woaini12",
 		Phone:                "",
-		Code:                 0,
+		Code:                 "",
 	}
 
 	r := LoginUser(ctx,req)
@@ -34,89 +34,100 @@ func TestLoginUser(t *testing.T) {
 
 }
 
-func TestAddAdminUser(t *testing.T) {
-	ctx := initenv()
-	req := &corpus.AddAdminUserReq{
-		UserId:               4,
-		Cookie:               "",
-	}
-	r := AddAdminUser(ctx,req)
-
-	log.Printf("%v",r)
-}
-
-func TestAddAuth(t *testing.T) {
-	ctx := initenv()
-	req := &corpus.AddAuthReq{
-		AuthCode:             "Evaluation_Service",
-		AuthDescription:      "打分服务权限码",
-		ServiceName:          "http://service/evaluation/11",
-		Cookie:               "JnL3gxsI402j4hs4",
-	}
-	r := AddAuth(ctx,req)
-	log.Printf("%v",r)
-}
-
-func TestEvaluation(t *testing.T) {
-	ctx := initenv()
-	req := &corpus.EvaluationReq{
-		Audio:                "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_chapter.wav",
-		Text:"Firefighters take part in an emergency rescue drill in a forest in Taian city, Shandong province, on Feb 24, 2019. This is the countrys largest joint air-ground drill with around 2,000 rescuers, seven helicopters and vehicles, and over 1,200 firefighting equipment taking part in the exercise.",
-		Cookie:               "JnL3gxsI402j4hs4",
-	}
-	r := Evaluation(ctx,req)
-
-	log.Printf("%v",r)
-
-	time.Sleep(time.Second*5)
-}
-
-func TestGetKeyWord(t *testing.T) {
-	ctx := initenv()
-	req := &corpus.GetKeyWordReq{
-		Text:                 "C:\\Users\\华硕\\Desktop\\pr\\1.txt",
-		Cookie:               "",
-	}
-	r := GetKeyWord(ctx, req)
-
-	log.Printf("%v",r)
-
-	time.Sleep(time.Second*5)
-}
-
-
-func TestTransAudioToText(t *testing.T) {
-
-	file := "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_sentence.wav"
-
-	audioText(file)
-
-}
-
-func TestRecognizeAge(t *testing.T) {
-	file := "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\eng\\en_sentence.wav"
-	recognizeAge(file)
-}
-
-func TestPictureResult_String(t *testing.T) {
-	picture_trans("")
-}
-
 func TestDelUserInfo(t *testing.T) {
-
-	ctx := initenv()
-	req := &corpus.RecognizeImageReq{
-		File:                 "C:\\Users\\华硕\\Desktop\\file.png",
-		Cookie:               "",
-		XXX_NoUnkeyedLiteral: struct{}{},
-		XXX_unrecognized:     nil,
-		XXX_sizecache:        0,
+	type args struct {
+		ctx context.Context
+		req *corpus.DelUserInfoReq
 	}
-	r := RecognizeImage(ctx,req)
-	log.Printf("%v",r)
+	tests := []struct {
+		name string
+		args args
+		want *corpus.DelUserInfoRes
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DelUserInfo(tt.args.ctx, tt.args.req); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DelUserInfo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
-func TestDelAdminUser(t *testing.T) {
+func TestListUserInfo(t *testing.T) {
+	ctx := initenv()
+	req := &corpus.ListUserInfoReq{
+		Offset:               0,
+		Limit:                10,
+		EMail:                "",
+		UserName:             "",
+		Phone:                "",
+		Cookie:               "",
+	}
+	res := ListUserInfo(ctx,req)
+	log.Printf("%v",res)
+}
 
+func TestLoginOutUserInfo(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		req *corpus.LogoutUserInfoReq
+	}
+	tests := []struct {
+		name string
+		args args
+		want *corpus.LogoutUserInfoRes
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := LoginOutUserInfo(tt.args.ctx, tt.args.req); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoginOutUserInfo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
+func TestLoginUser1(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		req *corpus.LoginUserReq
+	}
+	tests := []struct {
+		name string
+		args args
+		want *corpus.LoginUserRes
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := LoginUser(tt.args.ctx, tt.args.req); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoginUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUpdateUserInfo(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		req *corpus.UpdateUserInfoReq
+	}
+	tests := []struct {
+		name string
+		args args
+		want *corpus.UpdateUserInfoRes
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UpdateUserInfo(tt.args.ctx, tt.args.req); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UpdateUserInfo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
