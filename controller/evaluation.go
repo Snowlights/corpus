@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	corpus "github.com/Snowlights/pub/grpc"
 	"io"
@@ -22,10 +23,25 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 	fun := "Controller.Evaluation -->"
 	res := &corpus.EvaluationRes{}
 	//todo check cookie
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
 
+	pass = cache.CheckUserAuth(ctx,cache.EvaluationAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
 	data := evaluation(req.Audio,req.Text)
 	//var m map[string]interface{}
-
 	//erro := json.Unmarshal(data,&m)
 
 	dataList,resp := analizeEvaluationData(data,req)
@@ -47,7 +63,6 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 		TotalNumber:          int64(len(words)),
 		TotalScore:           int64(score),
 	}
-
 	log.Printf("%v",data)
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	return res

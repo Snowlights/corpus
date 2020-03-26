@@ -18,10 +18,15 @@ func initenv() context.Context{
 }
 func TestAddCookieToList(t *testing.T) {
 	initenv()
-	AddCookieToList("JnL3gxsI402j4hs4")
-	AddCookieToList("ONkSy6HRfzRX7w1n")
+	pass := AddCookieToList("JnL3gxsI402j4hs4")
+	fmt.Printf("%v",pass)
+	pass = AddCookieToList("ONkSy6HRfzRX7w1n")
+	fmt.Printf("%v",pass)
+	pass = CheckOnLine("JnL3gxsI402j4hs4")
+	fmt.Printf("%v",pass)
 	ListCookieList()
-	DelCookieFromList("JnL3gxsI402j4hs4")
+	pass = DelCookieFromList("JnL3gxsI402j4hs4")
+	fmt.Printf("%v",pass)
 	fmt.Printf("--------------\n")
 	ListCookieList()
 }

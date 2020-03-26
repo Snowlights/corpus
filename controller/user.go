@@ -76,7 +76,7 @@ func LoginUser(ctx context.Context,req *corpus.LoginUserReq) *corpus.LoginUserRe
 	if req.EMail != ""{
 		SendEmail(ctx,[]string{req.EMail})
 	}
-
+	cache.AddCookieToList(data["token"].(string))
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	res.Data = &corpus.LoginUserData{
 		Cookie:               data["token"].(string),
@@ -131,6 +131,33 @@ func UpdateUserPhone(ctx context.Context,req *corpus.UpdateUserPhoneReq) *corpus
 		return res
 	}
 
+	limit := map[string]interface{}{
+		"offset" : 0,
+		"limit" : 1,
+	}
+	cond := map[string]interface{}{
+		"phone" : req.Phone,
+		"is_deleted" : false,
+	}
+
+	userinfo,err := daoimpl.UserDao.ListUserInfo(ctx,limit,cond)
+	if err != nil{
+		log.Fatalf("%v %s list user info %v",ctx,fun,req.Cookie)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	if len(userinfo) > 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "该手机号已经绑定其他账号",
+		}
+		return res
+	}
+
 	pass = cache.CheckPhoneCode(req.Phone,req.Code)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
@@ -177,6 +204,10 @@ func UpdateUserInfo(ctx context.Context ,req *corpus.UpdateUserInfoReq) *corpus.
 		return res
 	}
 
+	emailConds := map[string]interface{}{
+		"e_mail" : req.EMail,
+		"is_deleted" : false,
+	}
 	conds := map[string]interface{}{
 		"id" : req.UserId,
 	}
@@ -184,6 +215,23 @@ func UpdateUserInfo(ctx context.Context ,req *corpus.UpdateUserInfoReq) *corpus.
 		"limit" : 1,
 		"offset" : 0,
 	}
+	userinfoemail, err := daoimpl.UserDao.ListUserInfo(ctx,limit,emailConds)
+	if err != nil{
+		log.Fatalf("%v %s error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	if len(userinfoemail) > 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "该邮箱已经绑定了账号，请切换邮箱",
+		}
+		return res
+	}
+
 	userInfo,err := daoimpl.UserDao.ListUserInfo(ctx,limit,conds)
 	if err != nil{
 		log.Fatalf("%v %s error %v",ctx,fun,err)
@@ -354,6 +402,7 @@ func formCorpusUserInfoList(input []*domain.UserInfo) []*corpus.UserInfo{
 			UserName:             item.UserName,
 			Phone:                item.Phone,
 			EMail:                item.E_mail,
+			UserDescription:      item.UserDescription,
 		})
 	}
 	return output

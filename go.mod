@@ -3,7 +3,7 @@ module github.com/Snowlights/corpus
 go 1.12p
 
 require (
-	github.com/Snowlights/pub v0.0.0-20200324123359-7e76f4f96288
+	github.com/Snowlights/pub v0.0.0-20200326125510-3cc26fe27157
 	github.com/astaxie/beego v1.12.1
 	github.com/facebookgo/runcmd v0.0.0-20150612182913-2a9d85ff45fd
 	github.com/go-sql-driver/mysql v1.5.0

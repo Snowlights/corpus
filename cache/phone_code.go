@@ -22,10 +22,19 @@ type MessageManager struct {
 
 var messageManage MessageManager
 
+var (
+	KeyWordAuthCode string
+	EvaluationAuthCode string
+	TransAuthCode string
+	ImageAuthCode string
+	AudioAuthCode string
+	AgeAuthCode string
+)
+
 func Prepare(ctx context.Context){
 	messageManage.PhoneCode = make(map[string]*Timer)
-	cookieList.cookieList = make([]string,500)
-	cookieList.adminCookieList = make([]string,500)
+	cookieList.cookieList = make([]string,10)
+	cookieList.adminCookieList = make([]string,10)
 	go messageManage.syncTimer(ctx)
 }
 func (m *MessageManager) syncTimer(ctx context.Context){
@@ -39,7 +48,10 @@ SyncLoop:
 		if err != nil{
 			logs.Error(err)
 		}
-
+		err = ReoladAuthCode(ctx)
+		if err != nil{
+			logs.Error(err)
+		}
 		select {
 		case <-time.After(20*time.Second):
 			log.Printf("sync message code")
@@ -48,6 +60,40 @@ SyncLoop:
 			break SyncLoop
 		}
 	}
+}
+
+func ReoladAuthCode(ctx context.Context) error{
+	limit := map[string]interface{}{
+		"limit": 10,
+		"offset" : 0,
+	}
+	conds := map[string]interface{}{
+		"is_deleted" : false,
+	}
+	dataList,err := daoimpl.AuthDao.ListAuth(ctx,limit,conds)
+	if err != nil{
+		logs.Error(err)
+	}
+
+	for _, item := range dataList{
+		switch item.ServiceName{
+		case "/service/keyword":
+			KeyWordAuthCode = item.AuthCode
+		case "/service/evaluation":
+			EvaluationAuthCode = item.AuthCode
+		case "/service/audio" :
+			AudioAuthCode = item.AuthCode
+		case "/service/picture":
+			ImageAuthCode = item.AuthCode
+		case "/service/trans":
+			TransAuthCode = item.AuthCode
+		case "/service/age":
+			AgeAuthCode = item.AuthCode
+		}
+	}
+
+	fmt.Printf("KeyWordAuthCode %v EvaluationAuthCode %v AudioAuthCode %v ImageAuthCode %v TransAuthCode %v AgeAuthCode %v\n", KeyWordAuthCode,EvaluationAuthCode,AudioAuthCode,ImageAuthCode,TransAuthCode,AgeAuthCode)
+	return nil
 }
 
 func ReoladAdmin(ctx context.Context) error{
@@ -114,9 +160,9 @@ func AddPhoneCode(phone string,code string) bool{
 
 func DelPhoneCode(phone string) bool{
 	messageManage.mu.Lock()
-	defer messageManage.mu.Unlock()
 
 	delete(messageManage.PhoneCode,phone)
+	messageManage.mu.Unlock()
 	ListPhoneCode()
 	return true
 }
@@ -133,6 +179,9 @@ func CheckPhoneCode(phone string,code string) bool{
 
 func ListPhoneCode(){
 	fmt.Printf("ListPhoneCode-----------------------\n" )
+	if len(messageManage.PhoneCode) == 0{
+		return
+	}
 	for k,v := range messageManage.PhoneCode{
 		fmt.Printf("%v  %v \n",k,v)
 	}

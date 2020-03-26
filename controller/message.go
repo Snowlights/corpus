@@ -77,8 +77,8 @@ func message(mobile string) (string,error){
 	v := url.Values{}
 	_now := strconv.FormatInt(time.Now().Unix(), 10)
 	//fmt.Printf(_now)
-	_account := "C76170131"//查看用户名 登录用户中心->验证码通知短信>产品总览->API接口信息->APIID
-	_password := "ea3d48374ad86241459043765313b45b" //查看密码 登录用户中心->验证码通知短信>产品总览->API接口信息->APIKEY
+	_account := "C11002593"//查看用户名 登录用户中心->验证码通知短信>产品总览->API接口信息->APIID
+	_password := "e92b1b57a97d8575025504993fd743da" //查看密码 登录用户中心->验证码通知短信>产品总览->API接口信息->APIKEY
 	_mobile := mobile
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))

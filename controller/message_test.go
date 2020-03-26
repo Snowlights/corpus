@@ -1,15 +1,18 @@
 package controller
 
 import (
-	corpus "github.com/Snowlights/pub/grpc"
+	"fmt"
 	"testing"
 )
 
 func TestSendMessage(t *testing.T) {
 	ctx := initenv()
-	req := &corpus.SendMessageReq{
-		Phone:                "",
+	//req := &corpus.SendMessageReq{
+	//	Phone:                "18846085051",
+	//}
+	code,err := message("18846082154")
+	if err != nil{
+		return
 	}
-	SendMessage(ctx,req)
-
+	fmt.Printf("%v %v",ctx,code)
 }

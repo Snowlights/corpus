@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
@@ -16,6 +17,23 @@ import (
 func AddTransAudio(ctx context.Context,req *corpus.AddTransAudioReq) *corpus.AddTransAudioRes{
 	fun := "Controller.AddTransAudio -->"
 	res := &corpus.AddTransAudioRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
+
+	pass = cache.CheckUserAuth(ctx,cache.TransAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
 	var output string
 	var err error
 	switch req.AudioType{
@@ -48,7 +66,6 @@ func AddTransAudio(ctx context.Context,req *corpus.AddTransAudioReq) *corpus.Add
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
-
 	return res
 }
 
@@ -80,6 +97,47 @@ func toAddTransAudio(ctx context.Context,req *corpus.AddTransAudioReq,output str
 func DelTransAudio(ctx context.Context,req *corpus.DelTransAudioReq) *corpus.DelTransAudioRes{
 	fun := "Controller.DelTransAudio -->"
 	res := &corpus.DelTransAudioRes{}
+
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
+	limit := map[string]interface{}{
+		"limit" : 1,
+		"offset" : 0,
+	}
+	cond := map[string]interface{}{
+		"id" : req.AudioId,
+		"is_deleted" : false,
+	}
+	audioInfo,err := daoimpl.AudioDao.ListAudio(ctx,limit,cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	if len(audioInfo) == 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未找到该转码信息",
+		}
+		return res
+	}
+
+	if req.Cookie != audioInfo[0].CreatedBy{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "非本人不可删除",
+		}
+		return res
+	}
 
 	data, conds ,audit := toDelTransAudio(ctx,req)
 

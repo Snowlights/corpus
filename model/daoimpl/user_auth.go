@@ -32,6 +32,9 @@ func (m *UserAuthLocalImpl) AddUserAuth(ctx context.Context,data map[string]inte
 func (m *UserAuthLocalImpl) DelUserAuth(ctx context.Context,data,conds map[string]interface{}) (int64,error){
 	return delUserAuth(ctx,m.DB,data,conds)
 }
+func (m *UserAuthLocalImpl) UpdateUserAuth(ctx context.Context,data,conds map[string]interface{}) (int64,error){
+	return updateUserAuth(ctx,m.DB,data,conds)
+}
 func (m *UserAuthLocalImpl) ListUserAuth(ctx context.Context,limit,conds map[string]interface{}) ([]*domain.UserAuthInfo,error){
 	return listUserAuth(ctx,m.DB,limit,conds)
 }
@@ -41,7 +44,7 @@ func (m *UserAuthLocalImpl) CountUserAuth(ctx context.Context,conds map[string]i
 
 func getUserAuth(ctx context.Context,db model.DBTx,conds map[string]interface{})([]*domain.UserAuthInfo,error){
 	fun := "getUserAuth -->"
-	cond := buildGet(conds,domain.EmptyUser.TableName())
+	cond := buildGet(conds,domain.EmptyUserAuth.TableName())
 
 	rows, err := db.Query(cond)
 	if err != nil{
@@ -75,7 +78,7 @@ func addUserAuth(ctx context.Context,db model.DBTx, data map[string]interface{})
 }
 func delUserAuth(ctx context.Context,db model.DBTx,data,conds map[string]interface{}) (int64,error){
 	fun := "delUserAuth -->"
-	cond := buildDelete(data,conds,domain.EmptyUser.TableName())
+	cond := buildDelete(data,conds,domain.EmptyUserAuth.TableName())
 
 	sqlResult, err := db.Exec(cond)
 	if err != nil{
@@ -86,9 +89,22 @@ func delUserAuth(ctx context.Context,db model.DBTx,data,conds map[string]interfa
 	return sqlResult.RowsAffected()
 	return 0,nil
 }
+func updateUserAuth(ctx context.Context,db model.DBTx,data,conds map[string]interface{}) (int64,error){
+	fun := "updateUserAuth -->"
+	cond := buildUpdate(data,conds,domain.EmptyUserAuth.TableName())
+
+	sqlResult, err := db.Exec(cond)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		return 0, err
+	}
+
+	return sqlResult.RowsAffected()
+}
+
 func listUserAuth(ctx context.Context,db model.DBTx,limit,conds map[string]interface{}) ([]*domain.UserAuthInfo,error){
 	fun := "listUserAuth -->"
-	cond := buildList(limit,conds,domain.EmptyUser.TableName())
+	cond := buildList(limit,conds,domain.EmptyUserAuth.TableName())
 
 	rows, err := db.Query(cond)
 	if err != nil{
@@ -112,7 +128,7 @@ func listUserAuth(ctx context.Context,db model.DBTx,limit,conds map[string]inter
 
 func countUserAuth(ctx context.Context,db model.DBTx,conds map[string]interface{}) (total int64,err error){
 	fun := "countUserAuth -->"
-	cond := buildCount(conds,domain.EmptyUser.TableName())
+	cond := buildCount(conds,domain.EmptyUserAuth.TableName())
 	rows, err := db.Query(cond)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)

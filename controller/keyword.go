@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
@@ -24,7 +25,23 @@ import (
 func GetKeyWord(ctx context.Context,req*corpus.GetKeyWordReq) *corpus.GetKeyWordRes{
 	fun := "Controller.GetKeyWord -->"
 	res := &corpus.GetKeyWordRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
 
+	pass = cache.CheckUserAuth(ctx,cache.KeyWordAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
 	r, err := geyWord(req.Text)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -51,8 +68,26 @@ func GetKeyWord(ctx context.Context,req*corpus.GetKeyWordReq) *corpus.GetKeyWord
 	if err!= nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
 	}
+
+	keywordData := toFormKeywordData(info)
+	res.Data = &corpus.GetKeyWordData{
+		Items:                keywordData,
+		Total:                int64(len(keywordData)),
+	}
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 	return res
+}
+
+func toFormKeywordData(info KeyWordResponse) []*corpus.KeyWord{
+	var data []*corpus.KeyWord
+	for _, item := range info.Data.Ke{
+		score,_ := strconv.ParseFloat(item.Score,32)
+		data = append(data,&corpus.KeyWord{
+			Text:                 item.Word,
+			Score:                float32(score),
+		})
+	}
+	return data
 }
 
 func toFormKeyWord(keyword *KeyWordResponse,req *corpus.GetKeyWordReq) (map[string]interface{},[]map[string]interface{},map[string]interface{}){

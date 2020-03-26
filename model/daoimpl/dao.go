@@ -10,6 +10,7 @@ var (
 	UserDao dao.UserDao
 	AdminUserDao dao.AdminUserDao
 	AuthDao dao.AuthDao
+	AuthTxDao dao.AuthTxDao
 	UserAuthDao dao.UserAuthDao
 	AuditDao dao.AuditDao
 	EvaluationDao dao.EvaluationDao
@@ -26,6 +27,7 @@ func PrePare(ctx context.Context){
 	UserDao = NewUserDao()
 	AdminUserDao = NewAdminUserDao()
 	AuthDao = NewAuthrDao()
+	AuthTxDao = NewAuthTxDao()
 	UserAuthDao = NewUserAuthDao()
 	AuditDao = NewAuditDao()
 	EvaluationDao = NewEvaluationDao()

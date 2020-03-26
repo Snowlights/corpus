@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	"github.com/Snowlights/corpus/model/domain"
 	corpus "github.com/Snowlights/pub/grpc"
@@ -14,6 +15,24 @@ import (
 func RecognizeImage(ctx context.Context,req *corpus.RecognizeImageReq) *corpus.RecognizeImageRes{
 	fun := "Controller.RecognizeImage --> "
 	res :=&corpus.RecognizeImageRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
+
+	pass = cache.CheckUserAuth(ctx,cache.ImageAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
+
 	rand.Seed(time.Now().Unix())
 	number := rand.Intn(10)
 
@@ -42,6 +61,9 @@ func RecognizeImage(ctx context.Context,req *corpus.RecognizeImageReq) *corpus.R
 	}
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
+	res.Data = &corpus.RecognizeImageData{
+		Text:                 data["picture_text"].(string),
+	}
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	return res
 }
@@ -103,7 +125,23 @@ func toFormRecognizeImageXf(req *corpus.RecognizeImageReq,resp *XfPictureResp,pr
 func TransAudioToText(ctx context.Context,req* corpus.TransAudioToTextReq) *corpus.TransAudioToTextRes{
 	fun := "Controller.TransAudioToText -->"
 	res := &corpus.TransAudioToTextRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
 
+	pass = cache.CheckUserAuth(ctx,cache.AudioAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
 	resp := audioText(req.Audio)
 	if resp.Data.Status != 2{
 		//cf()
@@ -132,6 +170,9 @@ func TransAudioToText(ctx context.Context,req* corpus.TransAudioToTextReq) *corp
 	}
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
+	res.Data = &corpus.TransAudioToTextData{
+		Text:                 data["audio_text"].(string),
+	}
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
 	return res
 }
@@ -161,11 +202,26 @@ func toTransAudioToText(ctx context.Context, req *corpus.TransAudioToTextReq,mes
 }
 
 
-
 func RecognizeAge(ctx context.Context, req *corpus.RecognizeAgeReq) *corpus.RecognizeAgeRes{
 	fun := "Controller.RecognizeAge"
 	res := &corpus.RecognizeAgeRes{}
+	pass := cache.CheckOnLine(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "未检测到登陆信息",
+		}
+		return res
+	}
 
+	pass = cache.CheckUserAuth(ctx,cache.AgeAuthCode,req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "用户未享有该权限",
+		}
+		return res
+	}
 	resp := recognizeAge(req.Audio)
 	data ,audit := toRecognizeAge(ctx,req,resp)
 	lastInsertId,err := daoimpl.RecognizeDao.AddRecognizeAge(ctx,data)
@@ -183,8 +239,15 @@ func RecognizeAge(ctx context.Context, req *corpus.RecognizeAgeReq) *corpus.Reco
 	}
 	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
 
+	res.Data = &corpus.RecognizeAgeData{
+		AgeChild:             data["child_score"].(string),
+		AgeMiddle:            data["middle_score"].(string),
+		AgeOld:               data["child_score"].(string),
+		Gender:               data["gender_type"].(string),
+		GenderMale:           data["gender_female"].(string),
+		GenderFemale:         data["gender_male"].(string),
+	}
 	log.Printf("%v %v success ,lastInsertId %d",ctx,fun,lastInsertId)
-
 	return res
 }
 func toRecognizeAge(ctx context.Context, req *corpus.RecognizeAgeReq,resp *RespData) (map[string]interface{},map[string]interface{}){

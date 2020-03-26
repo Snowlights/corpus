@@ -202,7 +202,9 @@ func buildList(limit, conds map[string]interface{},tableName string)string{
 		case []string:
 			vals = vals + fmt.Sprintf(" in (")
 			for _, item := range vv{
+				vals = vals + "'"
 				vals = vals + item
+				vals = vals + "'"
 				vals = vals +  ","
 			}
 			vals = vals[0:len(vals)-1]
@@ -245,7 +247,9 @@ func buildCount(conds map[string]interface{},tableName string) string{
 		case []string:
 			vals = vals + fmt.Sprintf(" in (")
 			for _, item := range vv{
+				vals = vals + "'"
 				vals = vals + item
+				vals = vals + "'"
 				vals = vals +  ","
 			}
 			vals = vals[0:len(vals)-1]

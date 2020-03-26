@@ -43,6 +43,32 @@ func AddAdminUser(ctx context.Context,req* corpus.AddAdminUserReq) *corpus.AddAd
 		return res
 	}
 
+	userId := map[string]interface{}{
+		"id" : req.UserId,
+		"is_deleted" : false,
+	}
+	userLimit := map[string]interface{}{
+		"limit" : 1,
+		"offset": 0,
+	}
+
+	userData,err := daoimpl.UserDao.ListUserInfo(ctx,userLimit,userId)
+	if err != nil{
+		log.Fatalf("%v %v error %v",ctx,fun,err)
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	if len(userData) == 0{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "不存在的用户",
+		}
+		return res
+	}
+
 	lastInsertId ,err := daoimpl.AdminUserDao.AddAdminUser(ctx,data)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -71,7 +97,7 @@ func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdm
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可添加",
+			Msg:                  "权限不足，非管理员不可删除",
 		}
 		return res
 	}
@@ -105,7 +131,7 @@ func ListAdminUser(ctx context.Context,req *corpus.ListAdminUserReq) *corpus.Lis
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可添加",
+			Msg:                  "权限不足，非管理员不可查看",
 		}
 		return res
 	}

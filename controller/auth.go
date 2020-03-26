@@ -105,51 +105,16 @@ func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAut
 		}
 		return res
 	}
-	data, conds,audit  := toUpdateAuth(ctx,req)
-
-	rowsAffected, err := daoimpl.AuthDao.UpdateAuth(ctx,data,conds)
+	err := daoimpl.AuthTxDao.UpdateAuthTx(ctx,req)
 	if err != nil{
-		log.Fatalf("%v %v error %v",ctx,fun,err)
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
 			Msg:                  err.Error(),
 		}
 		return res
 	}
-
-	auditLastInsertId, err := addAudit(ctx,audit)
-	if err!= nil{
-		log.Fatalf("%v %v error %v",ctx,fun,err)
-	}
-	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
-
-	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
-
+	log.Printf("%v %v success ",ctx,fun)
 	return res
-}
-
-func toUpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
-	now := time.Now().Unix()
-	data := map[string]interface{}{
-		"auth_code" : req.AuthCode,
-		"auth_description" : req.AuthDescription,
-		"service_name" : req.ServiceName,
-		"updated_at" : now,
-		"updated_by" : req.Cookie,
-	}
-	conds := map[string]interface{}{
-		"id" : req.Id,
-	}
-	audit := map[string]interface{}{
-		"table_name" : domain.EmptyAuth.TableName(),
-		"history" : fmt.Sprintf("%s update auth %v time %d ",req.Cookie,req.AuthCode,now),
-		"activity" : fmt.Sprintf("%s update auth",req.Cookie),
-		"content" : fmt.Sprintf("%v",data),
-		"created_at" : now,
-		"created_by" : req.Cookie,
-		"is_deleted" : false,
-	}
-	return data,conds,audit
 }
 
 
@@ -164,53 +129,16 @@ func DelAuth(ctx context.Context,req* corpus.DelAuthReq) *corpus.DelAuthRes{
 		}
 		return res
 	}
-	data , conds,audit  := toDelAuth(ctx,req)
-
-	rowsAffected, err := daoimpl.AuthDao.DelAuth(ctx,data,conds)
+	err := daoimpl.AuthTxDao.DelAuthTx(ctx,req)
 	if err != nil{
-		log.Fatalf("%v %v error %v",ctx,fun,err)
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
 			Msg:                  err.Error(),
 		}
 		return res
 	}
-
-	auditLastInsertId, err := addAudit(ctx,audit)
-	if err!= nil{
-		log.Fatalf("%v %v error %v",ctx,fun,err)
-	}
-	log.Printf("%v %v success ,auditLastInsertId %d",ctx,fun,auditLastInsertId)
-
-	log.Printf("%v %v success ,rowsAffected %d",ctx,fun,rowsAffected)
+	log.Printf("%v %v success ",ctx,fun)
 	return res
-}
-
-func toDelAuth(ctx context.Context,req* corpus.DelAuthReq) (map[string]interface{},map[string]interface{},map[string]interface{}){
-	now := time.Now().Unix()
-	data := map[string]interface{}{
-		"is_deleted": true,
-		"updated_at" : now,
-		"updated_by" : req.Cookie,
-	}
-	conds := map[string]interface{}{}
-
-	if req.Id != 0{
-		conds["id"] = req.Id
-	}
-	if req.AuthCode != ""{
-		conds["auth_code"] = req.AuthCode
-	}
-	audit := map[string]interface{}{
-		"table_name" : domain.EmptyAuth.TableName(),
-		"history" : fmt.Sprintf("%s del auth %v time %d ",req.Cookie,req.AuthCode,now),
-		"activity" : fmt.Sprintf("%s del auth",req.Cookie),
-		"content" : fmt.Sprintf("%v",data),
-		"created_at" : now,
-		"created_by" : req.Cookie,
-		"is_deleted" : false,
-	}
-	return data,conds,audit
 }
 
 
@@ -278,6 +206,15 @@ func AddUserAuth(ctx context.Context,req* corpus.AddUserAuthReq) *corpus.AddUser
 	res:= &corpus.AddUserAuthRes{}
 	data, conds,audit := toAddUserAuth(ctx,req)
 
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可添加",
+		}
+		return res
+	}
+
 	dataList,err := daoimpl.UserAuthDao.GetUserAuth(ctx,conds)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
@@ -344,6 +281,16 @@ func toAddUserAuth(ctx context.Context,req* corpus.AddUserAuthReq)(map[string]in
 func DelUserAuth(ctx context.Context,req *corpus.DelUserAuthReq) *corpus.DelUserAuthRes{
 	fun := "Controller.DelUserAuth --> "
 	res := &corpus.DelUserAuthRes{}
+
+	pass := cache.CheckIsAdmin(req.Cookie)
+	if !pass{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "权限不足，非管理员不可删除",
+		}
+		return res
+	}
+
 	data,conds,audit := toDelUserAuth(ctx,req)
 	rowsAffected,err := daoimpl.UserAuthDao.DelUserAuth(ctx,data,conds)
 	if err != nil{
