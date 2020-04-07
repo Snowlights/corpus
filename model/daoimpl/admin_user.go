@@ -122,7 +122,7 @@ func listAdminUser(ctx context.Context,db model.DBTx,limit, conds map[string]int
 func countAdminUser(ctx context.Context,db model.DBTx,conds map[string]interface{}) (total int64,err error){
 	fun:= "countAdminUser -->"
 
-	cond := buildCount(conds,domain.EmptyUser.TableName())
+	cond := buildCount(conds,domain.EmptyAdminUser.TableName())
 	rows, err := db.Query(cond)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)

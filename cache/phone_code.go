@@ -35,6 +35,7 @@ func Prepare(ctx context.Context){
 	messageManage.PhoneCode = make(map[string]*Timer)
 	cookieList.cookieList = make([]string,10)
 	cookieList.adminCookieList = make([]string,10)
+	apollo(ctx)
 	go messageManage.syncTimer(ctx)
 }
 func (m *MessageManager) syncTimer(ctx context.Context){

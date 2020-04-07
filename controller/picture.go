@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Snowlights/corpus/model/daoimpl"
+	corpus "github.com/Snowlights/pub/grpc"
 	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
@@ -15,8 +18,51 @@ import (
 	"time"
 )
 
+func ListImageByUserCookie(ctx context.Context,req *corpus.ListImageByUserCookieReq) *corpus.ListImageByUserCookieRes{
+	res := &corpus.ListImageByUserCookieRes{}
+
+	limit,conds := toListImageByUserCookie(ctx,req)
+	data,err := daoimpl.RecognizeDao.ListImageByCookie(ctx,limit,conds)
+	if err != nil{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+	total,err := daoimpl.RecognizeDao.CountImageByCookie(ctx,conds)
+	if err != nil{
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  err.Error(),
+		}
+		return res
+	}
+
+	res.Data = &corpus.ListImageByUserCookieData{
+		Items:                data,
+		Total:                total,
+		Offset:               req.Offset+int64(len(data)),
+		More:                 req.Offset+int64(len(data))<total,
+	}
+
+	return res
+}
+
+func toListImageByUserCookie(ctx context.Context,req *corpus.ListImageByUserCookieReq)(map[string]interface{},map[string]interface{}){
+	limit := map[string]interface{}{
+		"limit" : req.Limit,
+		"offset" : req.Offset,
+	}
+	conds := map[string]interface{}{
+		"created_by" : req.Cookie,
+		"is_deleted" : false,
+	}
+	return limit,conds
+}
+
 //百度api
-func handwriting_baidu(file string) *BaiduPicture{
+func handwriting_baidu(f []byte) *BaiduPicture{
 	// 应用APPID(必须为webapi类型应用,并开通手写文字识别服务,参考帖子如何创建一个webapi应用：http://bbs.xfyun.cn/forum.php?mod=viewthread&tid=36481)
 	//appid := "18926851"
 	// 接口密钥(webapi类型应用开通手写文字识别后，控制台--我的应用---手写文字识别---相应服务的apikey)
@@ -36,7 +82,7 @@ func handwriting_baidu(file string) *BaiduPicture{
 	checksum := fmt.Sprintf("%x", w.Sum(nil))
 	//测试图片地址
 	//f, _ := ioutil.ReadFile("C:\\Users\\wei11\\Desktop\\test1.png")
-	f, _ := ioutil.ReadFile(file)
+	//f, _ := ioutil.ReadFile(file)
 	f_base64 := base64.StdEncoding.EncodeToString(f)
 	data := url.Values{}
 	data.Add("image", f_base64)
@@ -73,7 +119,7 @@ type BaiduPicture struct {
 	WordsResult []BaiDuWord `json:"words_result"`
 }
 
-func handwriting_xunfei(file string) *XfPictureResp{
+func handwriting_xunfei(f []byte) *XfPictureResp{
 	// 应用APPID(必须为webapi类型应用,并开通手写文字识别服务,参考帖子如何创建一个webapi应用：http://bbs.xfyun.cn/forum.php?mod=viewthread&tid=36481)
 	appid := "5e1c39a3"
 	// 接口密钥(webapi类型应用开通手写文字识别后，控制台--我的应用---手写文字识别---相应服务的apikey)
@@ -90,7 +136,7 @@ func handwriting_xunfei(file string) *XfPictureResp{
 	checksum := fmt.Sprintf("%x", w.Sum(nil))
 	// 测试图片地址
 	//f, _ := ioutil.ReadFile("./tt_1.jpg")
-	f, _ := ioutil.ReadFile(file)
+	//f, _ := ioutil.ReadFile(file)
 	f_base64 := base64.StdEncoding.EncodeToString(f)
 	data := url.Values{}
 	data.Add("image", f_base64)

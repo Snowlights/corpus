@@ -9,6 +9,7 @@ import (
 	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model/daoimpl"
 	corpus "github.com/Snowlights/pub/grpc"
+	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,7 +33,7 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 		return res
 	}
 
-	pass = cache.CheckUserAuth(ctx,cache.EvaluationAuthCode,req.Cookie)
+	pass = cache.CheckUserAuth(ctx,cache.EvaluationAuthCode,req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
@@ -40,7 +41,30 @@ func Evaluation(ctx context.Context,req *corpus.EvaluationReq) *corpus.Evaluatio
 		}
 		return res
 	}
-	data := evaluation(req.Audio,req.Text)
+
+	var pis []byte
+	tmp := req.Audio[0:4]
+	if tmp == "http"{
+		resp, err := http.Get(req.Audio)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+		pix, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		pis = pix
+	} else {
+		dat, err := ioutil.ReadFile(req.Audio)
+		if err != nil {
+			logs.Error(err)
+			return nil
+		}
+		pis = dat
+	}
+
+	data := evaluation(pis,req.Text)
 	//var m map[string]interface{}
 	//erro := json.Unmarshal(data,&m)
 
@@ -164,7 +188,7 @@ func analizeEvaluationData(data []byte,req *corpus.EvaluationReq) (map[string]in
 	return dataList,&res
 }
 
-func evaluation(filename string,text string) []byte{
+func evaluation(filename []byte,text string) []byte{
 
 	appid := "5e1c39a3"
 	apikey := "6ffbf970ad40212e91e01d979c36a09c"
@@ -183,8 +207,8 @@ func evaluation(filename string,text string) []byte{
 	checksum := fmt.Sprintf("%x", w.Sum(nil))
 
 	//f, _ := ioutil.ReadFile("C:\\evaluation\\test\\chinese\\cn_chapter.wav")
-	f, _ := ioutil.ReadFile(filename)
-	audio := base64.StdEncoding.EncodeToString(f)
+	//f, _ := ioutil.ReadFile(filename)
+	audio := base64.StdEncoding.EncodeToString(filename)
 	//text := "将文字信息转化为声音信息，给应用配上嘴巴。我们提供了众多极具特色的发音人供您选择。"
 
 	data := url.Values{}

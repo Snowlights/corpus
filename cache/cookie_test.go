@@ -50,3 +50,10 @@ func TestAddPhoneCode(t *testing.T) {
 
 	time.Sleep(time.Second)
 }
+
+func TestCheckOnLine2(t *testing.T) {
+	ctx := initenv()
+
+	apollo(ctx)
+	testout()
+}

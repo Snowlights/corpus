@@ -108,3 +108,7 @@ func (m *CorpusServiceTmp) TransAudioToText(ctx context.Context,req *corpus.Tran
 func (m *CorpusServiceTmp) RecognizeAge(ctx context.Context,req* corpus.RecognizeAgeReq) (*corpus.RecognizeAgeRes,error){
 	return controller.RecognizeAge(ctx,req),nil
 }
+
+func (m *CorpusServiceTmp) ListImageByUserCookie(ctx context.Context,req *corpus.ListImageByUserCookieReq) (*corpus.ListImageByUserCookieRes,error){
+	return controller.ListImageByUserCookie(ctx,req),nil
+}

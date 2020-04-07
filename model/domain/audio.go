@@ -2,7 +2,7 @@ package domain
 
 import corpus "github.com/Snowlights/pub/grpc"
 
-const TableAudio = "corpus_audit"
+const TableAudio = "corpus_audio"
 
 var EmptyAudio = &AudioInfo{}
 

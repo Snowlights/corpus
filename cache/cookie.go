@@ -51,7 +51,13 @@ func CheckOnLine(cookie string) bool{
 			return true
 		}
 	}
+	ctx := context.Background()
 	ListCookieList()
+
+	pass := CheckSuperAdmin(ctx,cookie)
+	if pass{
+		return pass
+	}
 	return false
 }
 

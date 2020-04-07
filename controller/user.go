@@ -321,7 +321,7 @@ func DelUserInfo(ctx context.Context,req *corpus.DelUserInfoReq) *corpus.DelUser
 	if userInfo[0].Token != req.Cookie{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "非本人无法修改",
+			Msg:                  "非本人无法注销",
 		}
 		return res
 	}
@@ -351,7 +351,7 @@ func ListUserInfo(ctx context.Context,req*corpus.ListUserInfoReq) *corpus.ListUs
 	fun := "Controller.ListUserInfo -- >"
 	res:= &corpus.ListUserInfoRes{}
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckIsAdmin(req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,

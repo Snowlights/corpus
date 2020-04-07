@@ -16,11 +16,11 @@ func AddAuth(ctx context.Context,req *corpus.AddAuthReq) *corpus.AddAuthRes{
 	res := &corpus.AddAuthRes{}
 
 	//todo check cookie
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass :=  cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可添加",
+			Msg:                  "权限不足，非超级管理员不可添加",
 		}
 		return res
 	}
@@ -97,11 +97,11 @@ func toAddAuth(ctx context.Context,req *corpus.AddAuthReq) (map[string]interface
 func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAuthRes{
 	fun := "Controller.UpdateAuth -->"
 	res := &corpus.UpdateAuthRes{}
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可修改",
+			Msg:                  "权限不足，非超级管理员不可修改",
 		}
 		return res
 	}
@@ -121,11 +121,11 @@ func UpdateAuth(ctx context.Context,req *corpus.UpdateAuthReq) *corpus.UpdateAut
 func DelAuth(ctx context.Context,req* corpus.DelAuthReq) *corpus.DelAuthRes{
 	fun := "Controller.DelAuth -->"
 	res := &corpus.DelAuthRes{}
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可删除",
+			Msg:                  "权限不足，非超级管理员不可删除",
 		}
 		return res
 	}
@@ -206,7 +206,7 @@ func AddUserAuth(ctx context.Context,req* corpus.AddUserAuthReq) *corpus.AddUser
 	res:= &corpus.AddUserAuthRes{}
 	data, conds,audit := toAddUserAuth(ctx,req)
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckIsAdmin(req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
@@ -282,7 +282,7 @@ func DelUserAuth(ctx context.Context,req *corpus.DelUserAuthReq) *corpus.DelUser
 	fun := "Controller.DelUserAuth --> "
 	res := &corpus.DelUserAuthRes{}
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckIsAdmin(req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,

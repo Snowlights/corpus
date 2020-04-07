@@ -30,6 +30,7 @@ type PictureInfo struct {
 	Id int64
 	PictureSrc string
 	PictureDes string
+	Md5 string
 	PictureText string
 	CreatedAt int64
 	CreatedBy string

@@ -39,7 +39,7 @@ const (
 	Audio_Text_STATUS_LAST_FRAME     = 2
 )
 
-func audioText(file string) *PictureRespData{
+func audioText(file string) string{
 	fmt.Println(HmacWithShaTobase64Picture("hmac-sha256","hello\nhello","hello"))
 	st:=time.Now()
 	d := websocket.Dialer{
@@ -49,7 +49,7 @@ func audioText(file string) *PictureRespData{
 	conn, resp, err := d.Dial(assembleAuthUrlPicture(audioTextHostUrl, audioTextapiKey, audioTextapiSecret), nil)
 	if err != nil {
 		panic(readResp(resp)+err.Error())
-		return nil
+		return ""
 	}else if resp.StatusCode !=101{
 		panic(readResp(resp)+err.Error())
 	}
@@ -92,7 +92,7 @@ func audioText(file string) *PictureRespData{
 						"app_id": audioTextappid, //audioTextappid 必须带上，只需第一帧发送
 					},
 					"business": map[string]interface{}{ //business 参数，只需一帧发送
-						"language":"zh_cn",
+						"language":"en_us", //todo language
 						"domain":"iat",
 						"accent":"mandarin",
 					},
@@ -136,7 +136,7 @@ func audioText(file string) *PictureRespData{
 		}
 
 	}()
-
+	res := ""
 	//获取返回的数据
 	//var decoder Decoder
 	for {
@@ -147,11 +147,13 @@ func audioText(file string) *PictureRespData{
 			break
 		}
 		json.Unmarshal(msg,&resp)
+
 		//fmt.Println(string(msg))
 		fmt.Println(resp.Data.Result.String(),resp.Sid)
+		res = res+resp.Data.Result.String()
 		if resp.Code!=0{
 			fmt.Println(resp.Code,resp.Message,time.Since(st))
-			return nil
+			return ""
 		}
 		//decoder.Decode(&resp.Data.Result)
 		if resp.Data.Status == 2{
@@ -161,12 +163,11 @@ func audioText(file string) *PictureRespData{
 			break
 			//return
 		}
-		time.Sleep(1*time.Second)
-		return &resp
+
 	}
 
 	time.Sleep(1*time.Second)
-	return nil
+	return res
 }
 
 type PictureRespData struct {

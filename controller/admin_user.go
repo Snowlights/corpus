@@ -15,11 +15,11 @@ func AddAdminUser(ctx context.Context,req* corpus.AddAdminUserReq) *corpus.AddAd
 	fun := "Controller.AddAdminUser -->"
 	res := &corpus.AddAdminUserRes{}
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass :=  cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
-			Msg:                  "权限不足，非管理员不可添加",
+			Msg:                  "权限不足，非超级管理员不可添加",
 		}
 		return res
 	}
@@ -93,7 +93,7 @@ func DelAdminUser(ctx context.Context,req*corpus.DelAdminUserReq) *corpus.DelAdm
 	fun := "Controller.DelAdminUser -->"
 	res := &corpus.DelAdminUserRes{}
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
@@ -127,7 +127,7 @@ func ListAdminUser(ctx context.Context,req *corpus.ListAdminUserReq) *corpus.Lis
 	fun := "Controller.ListAdminUser --> "
 	res := &corpus.ListAdminUserRes{}
 
-	pass := cache.CheckIsAdmin(req.Cookie)
+	pass := cache.CheckIsAdmin(req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,

@@ -26,7 +26,7 @@ func AddTransAudio(ctx context.Context,req *corpus.AddTransAudioReq) *corpus.Add
 		return res
 	}
 
-	pass = cache.CheckUserAuth(ctx,cache.TransAuthCode,req.Cookie)
+	pass = cache.CheckUserAuth(ctx,cache.TransAuthCode,req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
@@ -255,32 +255,45 @@ func toListTransAudio(ctx context.Context,req *corpus.ListTransAudioReq) (map[st
 func transformToAAC(fpath string) (string, error) {
 	fun := "logic.transformToAAC -->"
 
-	// transform to aac
-	output := fpath[0:len(fpath)-3] + "aac"
+	md5Str, err := MD5Audio(fpath)
+	if err != nil{
+		logs.Error(err)
+		return "错误的MD5值",err
+	}
+	// transform to wav
+	output := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\age\\%v.aac",md5Str)
 	cmdSlice := []string{}
 	cmdSlice = append(cmdSlice, "-i", fpath, output)
-	cmd := exec.Command("ffmpeg.exe", cmdSlice...)
+	cmd := exec.Command("C:\\Users\\华硕\\Desktop\\ffmpeg\\bin\\ffmpeg.exe", cmdSlice...)
 	//cmd := exec.Command("ffmpeg", cmdSlice...)  //linux依赖 使用系统命令ffmpeg
-
-	streams, err := runcmd.Run(cmd)
-	if err != nil {
-		log.Printf("%s trans to AAC failed, error: %s, stdout: %s, stderr: %s", fun, err, streams.Stderr().String(), streams.Stdout().String())
-		return "", err
+	err = cmd.Start()
+	if err != nil{
+		logs.Error(fun,err)
+		return "",err
 	}
+	//streams, err := runcmd.Run(cmd)
+	//if err != nil {
+	//	log.Printf("%s trans to AAC failed, error: %s, stdout: %s, stderr: %s", fun, err, streams.Stderr().String(), streams.Stdout().String())
+	//	return "", err
+	//}
 	return output, nil
 }
 
 func transformToWAV(fpath string) (string, error) {
 	fun := "logic.transformToWAV -->"
 
-
+	md5Str, err := MD5Audio(fpath)
+	if err != nil{
+		logs.Error(err)
+		return "错误的MD5值",err
+	}
 	// transform to wav
-	output := fpath[0:len(fpath)-3] + "wav"
+	output := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\age\\%v.wav",md5Str)
 
 	cmdSlice := []string{}
 	cmdSlice = append(cmdSlice, "-y", "-i", fpath, "-b:a", "16k", "-ar", "16000", "-ac", "1", output)
 	//cmdSlice = append(cmdSlice, "-i", fpath, "-f", "wav", output)
-	cmd := exec.Command("ffmpeg.exe", cmdSlice...)
+	cmd := exec.Command("C:\\Users\\华硕\\Desktop\\ffmpeg\\bin\\ffmpeg.exe", cmdSlice...)
 	//cmd := exec.Command("ffmpeg", cmdSlice...)  //linux依赖 使用系统命令ffmpeg
 
 	streams, err := runcmd.Run(cmd)
@@ -292,15 +305,47 @@ func transformToWAV(fpath string) (string, error) {
 }
 
 func transformToMP3(fpath string) (string, error) {
-	fun := "logic.transformToWAV -->"
+	fun := "logic.transformToMp3 -->"
 
 	// transform to wav
-	output := fpath[0:len(fpath)-3] + "mp3"
+	md5Str, err := MD5Audio(fpath)
+	if err != nil{
+		logs.Error(err)
+		return "错误的MD5值",err
+	}
+	// transform to wav
+	output := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\age\\%v.mp3",md5Str)
 
 	cmdSlice := []string{}
 	cmdSlice = append(cmdSlice,"-i", fpath, "-f", "mp3", "-acodec", "libmp3lame", "-y", output)
 	//cmdSlice = append(cmdSlice, "-i", fpath, "-f", "wav", output)
-	cmd := exec.Command("ffmpeg.exe",cmdSlice...)
+	cmd := exec.Command("C:\\Users\\华硕\\Desktop\\ffmpeg\\bin\\ffmpeg.exe",cmdSlice...)
+	//cmd := exec.Command("ffmpeg", cmdSlice...)  //linux依赖 使用系统命令ffmpeg
+
+	streams, err := runcmd.Run(cmd)
+	if err != nil {
+		log.Printf("%s trans to wav failed, error: %s, stdout: %s, stderr: %s", fun, err, streams.Stderr().String(), streams.Stdout().String())
+		return "", err
+	}
+	return output, nil
+}
+
+func transformToPCM(fpath string) (string, error) {
+	fun := "logic.transformToPCM -->"
+
+	// transform to wav
+	md5Str, err := MD5Audio(fpath)
+	if err != nil{
+		logs.Error(err)
+		return "错误的MD5值",err
+	}
+	// transform to wav
+	output := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\age\\%v.pcm",md5Str)
+
+	cmdSlice := []string{}
+	cmdSlice = append(cmdSlice,"-y","-i", fpath, "-acodec", "pcm_s16le", "-f", "s16le", "-ac","1","-ar","16000", output)
+	//cmdSlice = append(cmdSlice, "-i", fpath, "-f", "wav", output)
+	cmd := exec.Command("C:\\Users\\华硕\\Desktop\\ffmpeg\\bin\\ffmpeg.exe",cmdSlice...)
 	//cmd := exec.Command("ffmpeg", cmdSlice...)  //linux依赖 使用系统命令ffmpeg
 
 	streams, err := runcmd.Run(cmd)

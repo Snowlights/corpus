@@ -34,7 +34,7 @@ func GetKeyWord(ctx context.Context,req*corpus.GetKeyWordReq) *corpus.GetKeyWord
 		return res
 	}
 
-	pass = cache.CheckUserAuth(ctx,cache.KeyWordAuthCode,req.Cookie)
+	pass = cache.CheckUserAuth(ctx,cache.KeyWordAuthCode,req.Cookie) || cache.CheckSuperAdmin(ctx,req.Cookie)
 	if !pass{
 		res.Errinfo = &corpus.ErrorInfo{
 			Ret:                  -1,
@@ -42,7 +42,18 @@ func GetKeyWord(ctx context.Context,req*corpus.GetKeyWordReq) *corpus.GetKeyWord
 		}
 		return res
 	}
-	r, err := geyWord(req.Text)
+
+	outfile,err := writeText(req.Text)
+	if err != nil{
+		log.Printf("保存用户的文本失败，请重新尝试")
+		res.Errinfo = &corpus.ErrorInfo{
+			Ret:                  -1,
+			Msg:                  "服务器错误，请重新尝试",
+		}
+		return res
+	}
+
+	r, err := geyWord(outfile)
 	if err != nil{
 		log.Fatalf("%v %v error %v",ctx,fun,err)
 		res.Errinfo = &corpus.ErrorInfo{
@@ -53,7 +64,7 @@ func GetKeyWord(ctx context.Context,req*corpus.GetKeyWordReq) *corpus.GetKeyWord
 	}
 	var info KeyWordResponse
 	err = json.Unmarshal(r,&info)
-	keyWordData,keyData,audit := toFormKeyWord(&info,req)
+	keyWordData,keyData,audit := toFormKeyWord(&info,req,outfile)
 
 	err = daoimpl.KeyWordTxDao.AddKeyWordTx(ctx,keyWordData,keyData)
 	if err != nil{
@@ -90,7 +101,7 @@ func toFormKeywordData(info KeyWordResponse) []*corpus.KeyWord{
 	return data
 }
 
-func toFormKeyWord(keyword *KeyWordResponse,req *corpus.GetKeyWordReq) (map[string]interface{},[]map[string]interface{},map[string]interface{}){
+func toFormKeyWord(keyword *KeyWordResponse,req *corpus.GetKeyWordReq,filename string) (map[string]interface{},[]map[string]interface{},map[string]interface{}){
 	now := time.Now().Unix()
 	keyWordData := map[string]interface{}{
 		"origin_text" : req.Text,
@@ -113,7 +124,7 @@ func toFormKeyWord(keyword *KeyWordResponse,req *corpus.GetKeyWordReq) (map[stri
 
 	auditData := map[string]interface{}{
 		"table_name" : domain.EmptyKeyWord.TableName(),
-		"history" : fmt.Sprintf("%s add KeyWord time %d ",req.Cookie,now),
+		"history" : fmt.Sprintf("%s add KeyWord time %d file name %v",req.Cookie,now,filename),
 		"activity" : fmt.Sprintf("%s  add KeyWord info",req.Cookie),
 		"content" : fmt.Sprintf("%v",keyWordData),
 		"created_at" : now,
@@ -124,6 +135,39 @@ func toFormKeyWord(keyword *KeyWordResponse,req *corpus.GetKeyWordReq) (map[stri
 	return keyWordData,keyData,auditData
 }
 
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func writeText(text string) (string,error){
+	md5String := GetMd5String(text)
+	var err1 error
+	var f *os.File
+	filename := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\text\\%v.txt",md5String)
+	if checkFileIsExist(filename) { //如果文件存在
+		f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
+		fmt.Println("文件存在")
+	} else {
+		f, err1 = os.Create(filename) //创建文件
+		fmt.Println("文件不存在,创建文件")
+	}
+	check(err1)
+	n, err1 := io.WriteString(f, text) //写入文件(字符串)
+	check(err1)
+	fmt.Printf("%v 写入 %d 个字节n", filename, n)
+
+	return filename,err1
+}
+
+func checkFileIsExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
 
 func geyWord(fileName string ) ([]byte,error){
 	appid := "5e1c39a3"
@@ -177,7 +221,7 @@ func geyWord(fileName string ) ([]byte,error){
 
 	res, _ := client.Do(req)
 	defer res.Body.Close()
-	res_body, _ := ioutil.ReadAll(res.Body)
+	res_body, err := ioutil.ReadAll(res.Body)
 	fmt.Print(string(res_body))
 
 	if err != nil{

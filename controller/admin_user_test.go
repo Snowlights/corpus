@@ -9,38 +9,17 @@ import (
 )
 
 func TestAddAdminUser(t *testing.T) {
-	initenv()
-	type args struct {
-		ctx context.Context
-		req *corpus.AddAdminUserReq
+	ctx := initenv()
+	req := &corpus.AddAdminUserReq{
+		UserId:               7,
+		Cookie:               "zhangwei",
 	}
-	tests := []struct {
-		name string
-		args args
-		want *corpus.AddAdminUserRes
-	}{
-		// TODO: Add test cases.
-		{
-			name: "",
-			args: args{
-				ctx: context.Background(),
-				req: &corpus.AddAdminUserReq{
-					UserId:               0,
-					Cookie:               "",
-					XXX_NoUnkeyedLiteral: struct{}{},
-					XXX_unrecognized:     nil,
-					XXX_sizecache:        0,
-				},
-			},
-		},
+	res := AddAdminUser(ctx,req)
+	log.Printf("%v",res)
+	if res.Errinfo!= nil{
+		log.Printf("%v",res.Errinfo.Msg)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := AddAdminUser(tt.args.ctx, tt.args.req); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("AddAdminUser() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+
 }
 
 func TestDelAdminUser(t *testing.T) {

@@ -102,6 +102,7 @@ func recognizeAge(file string) *RespData{
 	end:
 	}()
 	//获取返回的数据
+	var resData *RespData
 	for {
 		var resp = &RespData{}
 		err := conn.ReadJSON(resp)
@@ -116,7 +117,9 @@ func recognizeAge(file string) *RespData{
 					fmt.Printf("result is :%+v \n",result)
 					// todo
 				}
+
 				if resp.Data.Status == 2 { //当返回的数据status=2时，表示数据已经全部返回，这时候应该结束本次会话
+					resData = resp
 					break
 				}
 			}
@@ -127,7 +130,7 @@ func recognizeAge(file string) *RespData{
 		return resp
 	}
 	conn.Close()
-	return nil
+	return resData
 }
 type RespData struct {
 	Code    int    `json:"code"`

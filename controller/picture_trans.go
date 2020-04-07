@@ -21,7 +21,7 @@ func init() {
 	logs.SetLogFuncCallDepth(3)
 }
 
-func picture_trans(file string) *PictureTransData{
+func picture_trans(data []byte) *PictureTransData{
 	// 创建Request
 	req, err := http.NewRequest(http.MethodPost, CompressingUrl, nil)
 	if err != nil {
@@ -33,11 +33,11 @@ func picture_trans(file string) *PictureTransData{
 	req.SetBasicAuth(Email, ApiKey)
 
 	// 将图片以二进制的形式写入Request
-	data, err := ioutil.ReadFile("C:\\Users\\华硕\\Desktop\\11.png")
-	if err != nil {
-		logs.Error(err)
-		return nil
-	}
+	//data, err := ioutil.ReadFile(file)
+	//if err != nil {
+	//	logs.Error(err)
+	//	return nil
+	//}
 	req.Body = ioutil.NopCloser(bytes.NewReader(data))
 
 	// 发起请求
