@@ -1,0 +1,150 @@
+
+CREATE TABLE `corpus_access` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `auth_code` varchar(45) NOT NULL DEFAULT '''',
+  `auth_description` varchar(256) DEFAULT NULL,
+  `service_name` varchar(45) NOT NULL,
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `updated_at` bigint(20) NOT NULL,
+  `updated_by` varchar(45) NOT NULL,
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_admin` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `created_at` bigint(20) NOT NULL,
+  `created_by` varchar(45) NOT NULL,
+  `updated_at` bigint(20) NOT NULL,
+  `updated_by` varchar(45) NOT NULL,
+  `is_deleted` tinyint(4) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_audio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `audio_src` varchar(256) NOT NULL DEFAULT '''' COMMENT ''原始音频地址'',
+  `audio_des` varchar(256) NOT NULL DEFAULT '''' COMMENT ''转码最终地址'',
+  `audio_type` varchar(46) NOT NULL DEFAULT '''' COMMENT ''最终类型 aac mp4 wav'',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'' COMMENT ''创建时间'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''' COMMENT ''创建者'',
+  `updated_at` bigint(20) NOT NULL DEFAULT ''0'' COMMENT ''最后修改时间'',
+  `updated_by` varchar(45) NOT NULL DEFAULT '''' COMMENT ''最后修改者'',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'' COMMENT ''是否删除'',
+  PRIMARY KEY (`id`,`audio_src`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_audio_text` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `audio_src` varchar(256) NOT NULL DEFAULT '''' COMMENT ''原始音频'',
+  `audio_trans_from` varchar(256) NOT NULL DEFAULT '''' COMMENT ''调用的接口 百度 科大讯飞'',
+  `audio_text` text COMMENT ''识别的文本'',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `updated_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `updated_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8
+
+
+CREATE TABLE `corpus_audit` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `table_name` varchar(256) NOT NULL DEFAULT '''' COMMENT ''表名'',
+  `history` varchar(1024) NOT NULL DEFAULT '''' COMMENT ''历史 具体信息'',
+  `activity` varchar(256) NOT NULL DEFAULT '''' COMMENT ''活动 进行的操作'',
+  `content` text COMMENT ''操作的数据'',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=176 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_evaluation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `audio_src` varchar(256) NOT NULL DEFAULT '''',
+  `audio_text` varchar(2048) NOT NULL DEFAULT '''',
+  `total_score` varchar(60) NOT NULL DEFAULT ''0'',
+  `original_data` mediumtext,
+  `created_at` bigint(20) unsigned DEFAULT ''0'',
+  `created_by` varchar(45) DEFAULT '''',
+  `is_deleted` tinyint(4) DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_key` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `keyword_id` int(11) NOT NULL COMMENT ''keyword id'',
+  `word` varchar(45) NOT NULL DEFAULT '''' COMMENT ''关键字'',
+  `score` varchar(46) NOT NULL DEFAULT '''' COMMENT ''概率'',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_keyword` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `origin_text` text NOT NULL,
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_picture` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `picture_src` varchar(256) NOT NULL DEFAULT '''',
+  `picture_des` varchar(256) NOT NULL DEFAULT '''',
+  `md5` varchar(45) NOT NULL,
+  `picture_text` varchar(256) NOT NULL DEFAULT '''',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_recognize` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `audio_src` varchar(1024) NOT NULL DEFAULT '''',
+  `recognize_age_type` varchar(256) NOT NULL DEFAULT '''' COMMENT ''0 middle 12-40 1 child <12 2 old >40'',
+  `child_score` varchar(45) NOT NULL DEFAULT '''',
+  `middle_score` varchar(45) NOT NULL DEFAULT '''',
+  `old_score` varchar(45) NOT NULL DEFAULT '''',
+  `gender_type` varchar(45) NOT NULL DEFAULT '''' COMMENT ''0 female 1 male'',
+  `gender_female` varchar(45) NOT NULL DEFAULT '''',
+  `gender_male` varchar(45) NOT NULL DEFAULT '''',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_name` varchar(45) NOT NULL DEFAULT '''',
+  `user_description` varchar(128) NOT NULL DEFAULT '''',
+  `e_mail` varchar(128) NOT NULL DEFAULT '''',
+  `user_password` varchar(45) NOT NULL DEFAULT '''',
+  `phone` varchar(45) NOT NULL DEFAULT '''',
+  `token` varchar(45) NOT NULL DEFAULT '''',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(46) NOT NULL DEFAULT ''admin'',
+  `updated_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `updated_by` varchar(45) NOT NULL DEFAULT ''admin'',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8
+
+CREATE TABLE `corpus_user_access` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `auth_code` varchar(45) NOT NULL DEFAULT '''',
+  `created_at` bigint(20) NOT NULL DEFAULT ''0'',
+  `created_by` varchar(45) NOT NULL DEFAULT '''',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8
+

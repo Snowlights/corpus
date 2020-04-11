@@ -27,13 +27,13 @@ func InitFunc() (err error) {
 	daoimpl.PrePare(ctx)
 	cache.Prepare(ctx)
 
-	log.Println("%s usccess %s",ctx,fun)
+	log.Printf("%s usccess %s", ctx, fun)
 	return nil
 }
 
 func main() {
 	err := InitFunc()
-	if err != nil{
+	if err != nil {
 		log.Fatalf("failed to init: %v", err)
 	}
 	lis, err := net.Listen("tcp", port)
@@ -47,6 +47,5 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
 	time.Sleep(time.Hour)
 }

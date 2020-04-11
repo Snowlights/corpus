@@ -3,7 +3,7 @@ module github.com/Snowlights/corpus
 go 1.12p
 
 require (
-	github.com/Snowlights/pub v0.0.0-20200407072648-e6b66649db2a
+	github.com/Snowlights/pub v0.0.0-20200411102916-3c19caf298cd
 	github.com/ZhengHe-MD/agollo/v4 v4.1.4
 	github.com/ZhengHe-MD/properties v0.2.3
 	github.com/astaxie/beego v1.12.1
@@ -17,7 +17,6 @@ require (
 	gocv.io/x/gocv v0.22.0
 	google.golang.org/grpc v1.28.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

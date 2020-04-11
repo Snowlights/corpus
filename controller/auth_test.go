@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAddUserAuth(t *testing.T) {
+func Test_AddUserAuth(t *testing.T) {
 	ctx := initenv()
 	req := &corpus.AddUserAuthReq{
 		UserId:               4,
