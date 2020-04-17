@@ -56,6 +56,7 @@ func RecognizeImage(ctx context.Context,req *corpus.RecognizeImageReq) *corpus.R
 			logs.Error(err)
 		}
 		go MyDCT(outPath)
+		go MyDCTRGB(outPath)
 		md5,err = Md5(outPath)
 		if err != nil{
 			logs.Error(err)

@@ -25,8 +25,14 @@ func TestGetMd5String(t *testing.T) {
 }
 
 func TestAddTransAudio(t *testing.T) {
-	//MyDCT("C:\\image\\32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320.jpg")
-	MyIDCT("C:\\image\\xml\\","5cc45fcecbab03869afba0551242d3d0")
+	MyDCTRGB("C:\\image\\32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320.jpg")
+	//MyiDCTRGB("C:\\image\\yuv\\","eafddcb6c451bdfa64cfe8148c340469")
+	//MyIDCT("C:\\image\\xml\\","5cc45fcecbab03869afba0551242d3d0")
+	//dat, err := ioutil.ReadFile("C:\\image\\32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320.jpg")
+	//if err != nil {
+	//	logs.Error(err)
+	//}
+	//picture_trans(dat)
 }
 
 func TestListAuth(t *testing.T) {

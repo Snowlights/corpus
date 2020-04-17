@@ -117,7 +117,7 @@ func delUserInfo(ctx context.Context,db model.DBTx,data,conds map[string]interfa
 
 func listUserInfo(ctx context.Context,db model.DBTx,limit, conds map[string]interface{}) ([]*domain.UserInfo,error){
 
-	fun := "delUserInfo -->"
+	fun := "listUserInfo -->"
 	cond := buildList(limit,conds,domain.EmptyUser.TableName())
 
 	rows, err := db.Query(cond)

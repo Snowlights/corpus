@@ -116,6 +116,40 @@ func MyIDCT(filename string,md5 string) error{
 	return nil
 }
 
+func MyDCTRGB(filename string) error{
+	time.Sleep(time.Second*5)
+	dctDll := syscall.MustLoadDLL("../dct.dll")
+	fmt.Println("+++++++syscall.LoadLibrary:", dctDll, "+++++++")
+	mydctrgb := dctDll.MustFindProc("mydctRGB")
+	fmt.Println("GetProcAddress", mydctrgb)
+	fmt.Printf("%v",StrPtr(filename))
+	md5Str, err := Md5(filename)
+	if err != nil{
+		logs.Error(err)
+		return err
+	}
+	//output := fmt.Sprintf("C:\\Users\\华硕\\Desktop\\pr\\age\\%v.wav",number)
+	outPath := fmt.Sprintf("C:\\image\\yuv\\%v.jpg", md5Str)
+	ret, _, err := mydctrgb.Call(StrPtr(filename),StrPtr(outPath))
+	if err != nil {
+		fmt.Println("DllTestDef.dll运算结果为:", ret)
+	}
+	return nil
+}
+
+func MyiDCTRGB(filename string,md5 string)error{
+	dctDll := syscall.MustLoadDLL("../dct.dll")
+	fmt.Println("+++++++syscall.LoadLibrary:", dctDll, "+++++++")
+	myidctrgb := dctDll.MustFindProc("myidctRGB")
+	fmt.Println("GetProcAddress", myidctrgb)
+
+	ret, _, err := myidctrgb.Call(StrPtr(filename),StrPtr(md5))
+	if err != nil {
+		fmt.Println("DllTestDef.dll运算结果为:", ret)
+	}
+	return nil
+}
+
 func SaveImage(imgUrl string) (string,error){
 	var file *os.File
 	var err error

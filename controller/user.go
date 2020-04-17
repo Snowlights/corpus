@@ -470,12 +470,20 @@ func toUpdateUserInfo(ctx context.Context,req *corpus.UpdateUserInfoReq) (map[st
 		"id" : req.UserId,
 	}
 	data := map[string]interface{}{
-		"user_name": req.UserName,
-		"e_mail" : req.EMail,
-		"user_password" : req.Password,
-		"user_description" : req.Description,
 		"updated_at" : now,
 		"updated_by" : req.Cookie,
+	}
+	if req.UserName != ""{
+		data["user_name"] = req.UserName
+	}
+	if req.Description != ""{
+		data["user_description"] = req.Description
+	}
+	if req.EMail != ""{
+		data["e_mail"] = req.EMail
+	}
+	if req.Password != ""{
+		data["user_password"] = req.Password
 	}
 
 	audit := map[string]interface{}{

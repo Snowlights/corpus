@@ -6,10 +6,12 @@ import (
 	"github.com/Snowlights/corpus/cache"
 	"github.com/Snowlights/corpus/model"
 	"github.com/Snowlights/corpus/model/daoimpl"
+	"github.com/Snowlights/pub/adapter"
 	corpus "github.com/Snowlights/pub/grpc"
 	"github.com/astaxie/beego/logs"
 	"log"
 	"reflect"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -161,7 +163,9 @@ func TestRecognizeImage(t *testing.T) {
 		File:                 "https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=4251611548,332805913&fm=11&gp=0.jpg",
 		Cookie: "zhangwei",
 	}
-	RecognizeImage(ctx,req)
+	res := RecognizeImage(ctx,req)
+	fmt.Printf("1111111\n")
+	fmt.Printf("%v",res)
 
 	time.Sleep(time.Second*30)
 }
@@ -197,10 +201,11 @@ func TestDelTransAudio(t *testing.T) {
 
 func TestEvaluation(t *testing.T) {
 	ctx :=initenv()
+	cache.AddCookieToList("lihua")
 	req := &corpus.EvaluationReq{
 		Audio:                "C:\\Users\\华硕\\Desktop\\pr\\evaluation\\aa\\In\\raz_in_p9_text.mp3",
 		Text:                 "in the mud.",
-		Cookie:               "zhangwei",
+		Cookie:               "lihua",
 	}
 	res := Evaluation(ctx,req)
 	fmt.Printf("%v",res)
@@ -262,7 +267,7 @@ func TestGetKeyWord2(t *testing.T) {
 
 }
 
-func TestListImageByUserCookie(t *testing.T) {
+func Test_ListImageByUserCookie(t *testing.T) {
 	ctx := initenv()
 	req := &corpus.ListImageByUserCookieReq{
 		Cookie:               "zhangwei",
@@ -275,4 +280,26 @@ func TestListImageByUserCookie(t *testing.T) {
 		fmt.Printf("%v\n",res.Errinfo.Msg)
 	}
 
+}
+
+func TestSendMessage2(t *testing.T) {
+	ctx := initenv()
+	req := &corpus.SendMessageReq{
+		Phone:                "18846082154",
+	}
+	res := adapter.SendMessage(ctx,req)
+	fmt.Printf("%v",res)
+	if res.Errinfo != nil{
+		fmt.Printf("%v\n",res.Errinfo.Msg)
+	}
+}
+
+func TestSendEmail(t *testing.T) {
+	ctx := initenv()
+	SendEmail(ctx,[]string{"858777157@qq.com"})
+}
+
+func TestUpdateUserPhone(t *testing.T) {
+	dll := syscall.MustLoadDLL("../dct.dll")
+	log.Printf("%v",dll)
 }

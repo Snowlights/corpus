@@ -36,7 +36,7 @@ func Prepare(ctx context.Context){
 	cookieList.cookieList = make([]string,10)
 	cookieList.adminCookieList = make([]string,10)
 	apollo(ctx)
-	go messageManage.syncTimer(ctx)
+	//go messageManage.syncTimer(ctx)
 }
 func (m *MessageManager) syncTimer(ctx context.Context){
 SyncLoop:
@@ -102,7 +102,7 @@ func ReoladAdmin(ctx context.Context) error{
 	var admin []string
 	limit := map[string]interface{}{
 		"offset" : 0,
-		"limit" : 10,
+		"limit" : 20,
 	}
 	conds := map[string]interface{}{
 		"is_deleted":false,
